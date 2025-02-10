@@ -31,56 +31,65 @@ export async function generateImage(params: {
     log.error("Too many image requests", { ...params, chain });
     return { blob: undefined, error: "Too many AI image requests" };
   }
-  const promptCompletion = await openai.chat.completions.create({
-    model: "o1-mini",
-    messages: [
-      {
-        role: "user",
-        content:
-          `You are an great artist and a creator of tokens on Mina protocol that are very popular and engaging. Create a prompt for DALL-E-3 for generation of an image of a token on Mina protocol with symbol ${symbol}, name ${name}` +
-          (description ? `, description: ${description}` : ""),
-      },
-    ],
-    user: address,
-  });
-  const prompt = promptCompletion?.choices[0]?.message?.content;
-  //console.log("prompt", prompt);
+  try {
+    const promptCompletion = await openai.chat.completions.create({
+      model: "o3-mini",
+      messages: [
+        {
+          role: "user",
+          content:
+            `You are an great artist and a creator of tokens on Mina protocol that are very popular and engaging. Create a prompt for DALL-E-3 for generation of an image of a token on Mina protocol with symbol ${symbol}, name ${name}` +
+            (description ? `, description: ${description}` : ""),
+        },
+      ],
+      user: address,
+    });
+    const prompt = promptCompletion?.choices[0]?.message?.content;
+    console.log("prompt", prompt);
 
-  if (!prompt) {
-    log.error("No prompt generated", { ...params, chain });
-    return {
-      blob: undefined,
-      error: "ChatGPT error: No DALL-E-3 prompt generated",
-    };
+    if (!prompt) {
+      log.error("No prompt generated", { ...params, chain });
+      return {
+        blob: undefined,
+        error: "ChatGPT error: No DALL-E-3 prompt generated",
+      };
+    }
+
+    const completion = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      size: "1024x1024",
+      user: address,
+    });
+
+    const url = completion.data[0].url;
+    if (!url) {
+      log.error("No image generated", { ...params, prompt, chain });
+      return { blob: undefined, error: "ChatGPT error: No image generated" };
+    }
+    log.info("Image generated", { ...params, prompt, chain, url });
+    const res = await fetch(url, {
+      method: "GET",
+    });
+
+    if (!res.ok) {
+      log.error("Cannot download ai image", { ...params, prompt, chain, url });
+      return {
+        blob: undefined,
+        error: "ChatGPT error: Cannot download AI image",
+      };
+    }
+
+    const blob = await res.blob();
+    return { blob, error: undefined };
+  } catch (error: any) {
+    log.error("Error generating image", {
+      ...params,
+      chain,
+      error: error?.message || error,
+    });
+    return { blob: undefined, error: "Error generating image" };
   }
-
-  const completion = await openai.images.generate({
-    model: "dall-e-3",
-    prompt: prompt,
-    size: "1024x1024",
-    user: address,
-  });
-
-  const url = completion.data[0].url;
-  if (!url) {
-    log.error("No image generated", { ...params, prompt, chain });
-    return { blob: undefined, error: "ChatGPT error: No image generated" };
-  }
-  log.info("Image generated", { ...params, prompt, chain, url });
-  const res = await fetch(url, {
-    method: "GET",
-  });
-
-  if (!res.ok) {
-    log.error("Cannot download ai image", { ...params, prompt, chain, url });
-    return {
-      blob: undefined,
-      error: "ChatGPT error: Cannot download AI image",
-    };
-  }
-
-  const blob = await res.blob();
-  return { blob, error: undefined };
 }
 
 function initializeRedisRateLimiterInternal(params: {
