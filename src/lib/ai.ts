@@ -13,6 +13,7 @@ const log = logtail.with({
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 let rateLimiter: RateLimiterRedis | null = null;
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
+
 initializeRedisRateLimiterInternal({
   name: "ai",
   points: 15,
@@ -89,7 +90,8 @@ function initializeRedisRateLimiterInternal(params: {
 }) {
   const { name, points, duration } = params;
   if (!RATE_LIMIT_KV_URL) {
-    throw new Error("RATE_LIMIT_KV_URL not set");
+    log.error("RATE_LIMIT_KV_URL not set");
+    return;
   }
 
   const redisClient = new Redis(RATE_LIMIT_KV_URL, {
