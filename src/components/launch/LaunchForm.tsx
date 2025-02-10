@@ -24,7 +24,7 @@ export function LaunchForm({
   const [image, setImage] = useState<File | undefined>(undefined);
   const [imageURL, setImageURL] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
-  const [symbol, setSymbol] = useState<string | undefined>(undefined);
+  const [symbol, setSymbol] = useState<string>("NFT");
   const [description, setDescription] = useState<string | undefined>(undefined);
   const [tokenType, setTokenType] = useState<"standard" | "meme">("standard");
   const [links, setLinks] = useState<TokenLinks>({
@@ -195,28 +195,6 @@ export function LaunchForm({
 
         <div className="mx-auto max-w-[48.125rem] md:flex mt-8">
           <div className="mb-12 md:w-1/2 md:pr-8">
-            {/* Token symbol */}
-            <div className="mb-6">
-              <label
-                htmlFor="token-symbol"
-                className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white"
-              >
-                NFT collection symbol<span className="text-red">*</span>
-              </label>
-              <input
-                type="text"
-                id="token-symbol"
-                className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
-                placeholder="Enter NFT collection symbol (max 6 chars)"
-                required
-                autoComplete="off"
-                maxLength={6}
-                onInput={(e) => {
-                  const input = e.target as HTMLInputElement;
-                  setSymbol(input.value);
-                }}
-              />
-            </div>
             {/* Token name */}
             <div className="mb-6">
               <label
@@ -261,6 +239,30 @@ export function LaunchForm({
                   input.rows = Math.min(5, Math.max(2, lineCount));
                 }}
               ></textarea>
+            </div>
+
+            {/* Token symbol */}
+            <div className="mb-6">
+              <label
+                htmlFor="token-symbol"
+                className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white"
+              >
+                NFT collection symbol<span className="text-red">*</span>
+              </label>
+              <input
+                type="text"
+                id="token-symbol"
+                className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
+                placeholder="Enter NFT collection symbol (max 6 chars)"
+                required
+                autoComplete="off"
+                maxLength={6}
+                value={symbol}
+                onInput={(e) => {
+                  const input = e.target as HTMLInputElement;
+                  setSymbol(input.value);
+                }}
+              />
             </div>
 
             {/* Token type */}
