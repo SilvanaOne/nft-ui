@@ -206,6 +206,9 @@ export async function proveTransaction(params: {
   { success: true; jobId: string } | { success: false; error: string }
 > {
   const { tx, signedData } = params;
+  console.log("proveTransaction: proving transaction", {
+    send: tx.sendTransaction,
+  });
   const proveTx = (
     await prove({
       body: {

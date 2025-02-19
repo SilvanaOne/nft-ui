@@ -35,13 +35,13 @@ export async function waitForProveJob(params: {
   //   throw new Error("Address is required for minting");
   // }
 
+  if (DEBUG)
+    console.log("waitForProveJob: waiting for job to finish", { jobId });
+
   await sleep(10000);
   let result = await getResult(jobId);
-  let jobStatus =
-    (result?.success &&
-      result?.results?.success &&
-      result?.results?.results?.[0]?.status) ??
-    "failed";
+  let jobStatus = (result?.success && result?.results?.jobStatus) ?? "unknown";
+  if (DEBUG) console.log("waitForProveJob: job status", { jobStatus, result });
   while (
     jobStatus !== "finished" &&
     jobStatus !== "used" &&
@@ -49,11 +49,9 @@ export async function waitForProveJob(params: {
   ) {
     await sleep(10000);
     result = await getResult(jobId);
-    jobStatus =
-      (result?.success &&
-        result?.results?.success &&
-        result?.results?.results?.[0]?.status) ??
-      "unknown";
+    jobStatus = (result?.success && result?.results?.jobStatus) ?? "unknown";
+    if (DEBUG)
+      console.log("waitForProveJob: job status: retry", { jobStatus, result });
   }
 
   if (
@@ -416,6 +414,14 @@ export async function waitForMinaTx(params: {
   //         : messages.mintBalance,
   //   });
   // }
+  updateTimelineItem({
+    groupId,
+    update: {
+      lineId: "minted",
+      content: "Minted",
+      status: "success",
+    },
+  });
   return true;
 }
 

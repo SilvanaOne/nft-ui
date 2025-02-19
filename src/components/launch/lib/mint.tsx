@@ -42,7 +42,10 @@ export async function mintNFT(params: {
     }
 
     const collectionName = randomName();
-    console.log(`Launching new NFT collection ${collectionName}...`);
+    console.log(`Launching new NFT collection ${collectionName}...`, {
+      sender,
+      collectionName,
+    });
 
     const collectionLaunchParams: LaunchNftCollectionStandardAdminParams = {
       txType: "nft:launch",
@@ -76,10 +79,16 @@ export async function mintNFT(params: {
       },
     };
 
+    if (DEBUG)
+      console.log("launchCollection: building tx", {
+        collectionLaunchParams,
+      });
     const launchReply = await buildCollectionLaunchTransaction(
       collectionLaunchParams
     );
     if (!launchReply.success) {
+      if (DEBUG)
+        console.log("Error in launchCollection", { error: launchReply.error });
       log.error("Error in launchCollection", { error: launchReply.error });
       updateTimelineItem({
         groupId,
@@ -115,6 +124,7 @@ export async function mintNFT(params: {
     const txResult = await mina?.sendTransaction(payloads.walletPayload);
     if (DEBUG) console.log("Transaction result", txResult);
     payloads.signedData = txResult?.signedData;
+
     if (payloads.signedData === undefined) {
       if (DEBUG) console.log("No signed data");
       updateTimelineItem({

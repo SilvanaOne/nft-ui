@@ -7,6 +7,7 @@ import { TokenProgress } from "./TokenProgress";
 import { LaunchForm } from "./LaunchForm";
 import { LaunchCollectionData } from "@/lib/token";
 import { useLaunchToken } from "@/context/launch";
+import { launchNFT } from "./lib/launch";
 import {
   TimeLineItem,
   TimelineGroup,
@@ -131,16 +132,16 @@ const LaunchToken: React.FC = () => {
     dispatch({ type: "SET_IS_LAUNCHED", payload: false });
     window.scrollTo({ top: 0, behavior: "instant" });
 
-    // launchToken({
-    //   data,
-    //   addLog,
-    //   updateTimelineItem,
-    //   setTotalSupply,
-    //   setTokenAddress,
-    //   setLikes,
-    //   isError,
-    //   getMintStatistics,
-    // });
+    launchNFT({
+      data,
+      addLog,
+      updateTimelineItem,
+      setTotalSupply,
+      setTokenAddress,
+      setLikes,
+      isError,
+      getMintStatistics,
+    });
   };
 
   return (
@@ -152,7 +153,7 @@ const LaunchToken: React.FC = () => {
               caption={state.isLaunched ? "Token Launched" : "Launching Token"}
               items={state.timelineItems}
               tokenAddress={state.tokenAddress}
-              image={state.tokenData.imageURL ?? "/token.png"}
+              image={state.tokenData.imageURL ?? "/img/minanft.png"}
               likes={state.likes}
               name={state.tokenData.name ?? state.tokenData.symbol}
               symbol={state.tokenData.symbol}

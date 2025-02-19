@@ -82,7 +82,7 @@ async function stopProcessUpdateRequests() {
   processRequests = false;
 }
 
-export async function launchToken(params: {
+export async function launchNFT(params: {
   data: LaunchCollectionData;
   addLog: (item: TimelineGroup) => void;
   updateTimelineItem: UpdateTimelineItemFunction;
@@ -115,6 +115,7 @@ export async function launchToken(params: {
   const { twitter, telegram, website, discord, instagram, facebook } = links;
   let likes = 0;
   log.error("launchCollection: starting", { data });
+  if (DEBUG) console.log("launchCollection: starting", { data });
 
   startProcessUpdateRequests(updateTimeLineItemInternal);
 
@@ -322,575 +323,591 @@ export async function launchToken(params: {
           status: "success",
         },
       });
-      //     updateTimelineItem({
-      //       groupId: "image",
-      //       update: messages.arweaveIncluded,
-      //     });
-      //   } else {
-      //     updateTimelineItem({
-      //       groupId: "image",
-      //       update: {
-      //         lineId: "pinningImage",
-      //         content:
-      //           "Failed to upload token image to Arweave permanent storage",
-      //         status: "error",
-      //       },
-      //     });
-      //     log.error("launchToken: failed to pin image", { imageHash });
-      //     return;
-      //   }
-      // }
-      if (isError()) return;
+    }
+    //     updateTimelineItem({
+    //       groupId: "image",
+    //       update: messages.arweaveIncluded,
+    //     });
+    //   } else {
+    //     updateTimelineItem({
+    //       groupId: "image",
+    //       update: {
+    //         lineId: "pinningImage",
+    //         content:
+    //           "Failed to upload token image to Arweave permanent storage",
+    //         status: "error",
+    //       },
+    //     });
+    //     log.error("launchToken: failed to pin image", { imageHash });
+    //     return;
+    //   }
+    // }
+    if (isError()) return;
 
-      // const imageURL = imageHash
-      //   ? (await arweaveHashToUrl(imageHash)) +
-      //     (imageExtension ? `/${symbol}.${imageExtension}` : "")
-      //   : undefined;
-      // const info: TokenInfo = {
-      //   symbol,
-      //   name,
-      //   description,
-      //   image: imageURL,
-      //   twitter,
-      //   discord,
-      //   telegram,
-      //   instagram,
-      //   facebook,
-      //   website,
-      //   tokenContractCode:
-      //     "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleToken.ts",
-      //   adminContractsCode: [
-      //     "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleTokenAdmin.ts",
-      //   ],
-      //   data: undefined,
-      //   isMDA: undefined,
-      //   launchpad: getLaunchpadUrl(),
-      // };
-      // if (DEBUG) console.log("Token info:", info);
+    // const imageURL = imageHash
+    //   ? (await arweaveHashToUrl(imageHash)) +
+    //     (imageExtension ? `/${symbol}.${imageExtension}` : "")
+    //   : undefined;
+    // const info: TokenInfo = {
+    //   symbol,
+    //   name,
+    //   description,
+    //   image: imageURL,
+    //   twitter,
+    //   discord,
+    //   telegram,
+    //   instagram,
+    //   facebook,
+    //   website,
+    //   tokenContractCode:
+    //     "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleToken.ts",
+    //   adminContractsCode: [
+    //     "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleTokenAdmin.ts",
+    //   ],
+    //   data: undefined,
+    //   isMDA: undefined,
+    //   launchpad: getLaunchpadUrl(),
+    // };
+    // if (DEBUG) console.log("Token info:", info);
 
-      // addLog({
-      //   groupId: "metadata",
-      //   status: "waiting",
-      //   title: `Pinning token metadata for ${data.symbol}`,
-      //   successTitle: `Token metadata for ${data.symbol} pinned`,
-      //   errorTitle: `Failed to pin token metadata for ${data.symbol}`,
-      //   lines: [messages.pinningMetadata],
-      //   requiredForSuccess: ["pinningMetadata", "arweaveTx", "arweaveIncluded"],
-      // });
+    // addLog({
+    //   groupId: "metadata",
+    //   status: "waiting",
+    //   title: `Pinning token metadata for ${data.symbol}`,
+    //   successTitle: `Token metadata for ${data.symbol} pinned`,
+    //   errorTitle: `Failed to pin token metadata for ${data.symbol}`,
+    //   lines: [messages.pinningMetadata],
+    //   requiredForSuccess: ["pinningMetadata", "arweaveTx", "arweaveIncluded"],
+    // });
 
-      // const metadataHash = await pinStringToArweave(
-      //   JSON.stringify(info, null, 2)
-      // );
+    // const metadataHash = await pinStringToArweave(
+    //   JSON.stringify(info, null, 2)
+    // );
 
-      // if (!metadataHash) {
-      //   updateTimelineItem({
-      //     groupId: "metadata",
-      //     update: {
-      //       lineId: "pinningMetadata",
-      //       content: "Failed to pin token metadata to Arweave permanent storage",
-      //       status: "error",
-      //     },
-      //   });
-      //   log.error("launchToken: failed to pin metadata", { metadataHash });
-      //   return;
-      // } else {
-      //   const metadataTxMessage = (
-      //     <>
-      //       <a
-      //         href={`https://arscan.io/tx/${metadataHash}`}
-      //         className="text-accent hover:underline"
-      //         target="_blank"
-      //         rel="noopener noreferrer"
-      //       >
-      //         Transaction
-      //       </a>{" "}
-      //       is sent to Arweave
-      //     </>
-      //   );
-      //   updateTimelineItem({
-      //     groupId: "metadata",
-      //     update: {
-      //       lineId: "arweaveTx",
-      //       content: metadataTxMessage,
-      //       status: "success",
-      //     },
-      //   });
-      //   updateTimelineItem({
-      //     groupId: "metadata",
-      //     update: {
-      //       lineId: "pinningMetadata",
-      //       content: "Token metadata is uploaded to Arweave",
-      //       status: "success",
-      //     },
-      //   });
-      //   updateTimelineItem({
-      //     groupId: "metadata",
-      //     update: messages.arweaveIncluded,
-      //   });
-      // }
-      // if (isError()) return;
-      // setLikes((likes += 10));
+    // if (!metadataHash) {
+    //   updateTimelineItem({
+    //     groupId: "metadata",
+    //     update: {
+    //       lineId: "pinningMetadata",
+    //       content: "Failed to pin token metadata to Arweave permanent storage",
+    //       status: "error",
+    //     },
+    //   });
+    //   log.error("launchToken: failed to pin metadata", { metadataHash });
+    //   return;
+    // } else {
+    //   const metadataTxMessage = (
+    //     <>
+    //       <a
+    //         href={`https://arscan.io/tx/${metadataHash}`}
+    //         className="text-accent hover:underline"
+    //         target="_blank"
+    //         rel="noopener noreferrer"
+    //       >
+    //         Transaction
+    //       </a>{" "}
+    //       is sent to Arweave
+    //     </>
+    //   );
+    //   updateTimelineItem({
+    //     groupId: "metadata",
+    //     update: {
+    //       lineId: "arweaveTx",
+    //       content: metadataTxMessage,
+    //       status: "success",
+    //     },
+    //   });
+    //   updateTimelineItem({
+    //     groupId: "metadata",
+    //     update: {
+    //       lineId: "pinningMetadata",
+    //       content: "Token metadata is uploaded to Arweave",
+    //       status: "success",
+    //     },
+    //   });
+    //   updateTimelineItem({
+    //     groupId: "metadata",
+    //     update: messages.arweaveIncluded,
+    //   });
+    // }
+    // if (isError()) return;
+    // setLikes((likes += 10));
 
-      // let waitForArweaveImageTxPromise = undefined;
-      // if (imageHash) {
-      //   waitForArweaveImageTxPromise = waitForArweaveTx({
-      //     hash: imageHash,
-      //     groupId: "image",
-      //     lineId: "arweaveIncluded",
-      //     updateTimelineItem,
-      //     type: "image",
-      //   });
-      // }
+    // let waitForArweaveImageTxPromise = undefined;
+    // if (imageHash) {
+    //   waitForArweaveImageTxPromise = waitForArweaveTx({
+    //     hash: imageHash,
+    //     groupId: "image",
+    //     lineId: "arweaveIncluded",
+    //     updateTimelineItem,
+    //     type: "image",
+    //   });
+    // }
 
-      // const waitForArweaveMetadataTxPromise = waitForArweaveTx({
-      //   hash: metadataHash,
-      //   groupId: "metadata",
-      //   lineId: "arweaveIncluded",
-      //   updateTimelineItem,
-      //   type: "metadata",
-      // });
+    // const waitForArweaveMetadataTxPromise = waitForArweaveTx({
+    //   hash: metadataHash,
+    //   groupId: "metadata",
+    //   lineId: "arweaveIncluded",
+    //   updateTimelineItem,
+    //   type: "metadata",
+    // });
 
-      // const uri = (await arweaveHashToUrl(metadataHash)) + `/${symbol}.json`;
-      // const lib = await libPromise;
+    // const uri = (await arweaveHashToUrl(metadataHash)) + `/${symbol}.json`;
+    // const lib = await libPromise;
 
-      // const {
-      //   tokenPrivateKey,
-      //   adminContractPrivateKey,
-      //   tokenPublicKey,
-      //   adminContractPublicKey,
-      //   tokenId,
-      // } = await deployTokenParams(lib);
-      // if (DEBUG) console.log("Deploy Params received");
-      // setTokenAddress(tokenPublicKey);
-      // updateTimelineItem({
-      //   groupId: "verify",
-      //   update: {
-      //     lineId: "privateKeysGenerated",
-      //     content: `Token private keys are generated`,
-      //     status: "success",
-      //   },
-      // });
+    // const {
+    //   tokenPrivateKey,
+    //   adminContractPrivateKey,
+    //   tokenPublicKey,
+    //   adminContractPublicKey,
+    //   tokenId,
+    // } = await deployTokenParams(lib);
+    // if (DEBUG) console.log("Deploy Params received");
+    // setTokenAddress(tokenPublicKey);
+    // updateTimelineItem({
+    //   groupId: "verify",
+    //   update: {
+    //     lineId: "privateKeysGenerated",
+    //     content: `Token private keys are generated`,
+    //     status: "success",
+    //   },
+    // });
 
-      const mintResult = await mintNFT({
-        symbol,
-        sender: walletInfo.address,
-        updateTimelineItem,
-        groupId: "deploy",
-        mintType: "collection",
+    if (DEBUG) console.log("launchToken: minting NFT collection", { data });
+    addLog({
+      groupId: "deploy",
+      status: "waiting",
+      title: `Launching NFT collection ${data.symbol}`,
+      successTitle: `NFT collection ${data.symbol} launched`,
+      errorTitle: `Failed to launch NFT collection ${data.symbol}`,
+      lines: [messages.txPrepared],
+      requiredForSuccess: ["minted"],
+      keepOnTop: true,
+    });
+
+    const mintResult = await mintNFT({
+      symbol,
+      sender: walletInfo.address,
+      updateTimelineItem,
+      groupId: "deploy",
+      mintType: "collection",
+    });
+
+    if (DEBUG)
+      console.log("launchToken: minting NFT collection result", {
+        mintResult,
       });
 
-      // const tokenAddress = mintResult.jobId
+    // const tokenAddress = mintResult.jobId
 
-      // const tokenAddressMsg = (
-      //   <>
-      //     Token address:{" "}
-      //     <a
-      //       href={`${explorerAccountUrl()}${tokenPublicKey}`}
-      //       className="text-accent hover:underline"
-      //       target="_blank"
-      //       rel="noopener noreferrer"
-      //     >
-      //       {tokenPublicKey}
-      //     </a>
-      //   </>
-      // );
-      // updateTimelineItem({
-      //   groupId: "verify",
-      //   update: {
-      //     lineId: "tokenAddress",
-      //     content: tokenAddressMsg,
-      //     status: "success",
-      //   },
-      // });
-      // if (isError()) return;
-      // // Save the result to a JSON file
-      // const deployParams = {
-      //   symbol,
-      //   name,
-      //   description,
-      //   image: imageURL,
-      //   website,
-      //   telegram,
-      //   twitter,
-      //   discord,
-      //   tokenPrivateKey,
-      //   adminContractPrivateKey,
-      //   tokenPublicKey,
-      //   adminContractPublicKey,
-      //   adminPublicKey,
-      //   metadata: uri,
-      // };
-      // updateTimelineItem({
-      //   groupId: "verify",
-      //   update: messages.privateKeysSaved,
-      // });
-      // // TODO: save with password encryption
-      // const deployParamsJson = JSON.stringify(deployParams, null, 2);
-      // const blob = new Blob([deployParamsJson], { type: "application/json" });
-      // const url = URL.createObjectURL(blob);
-      // const a = document.createElement("a");
-      // a.href = url;
-      // const fileName = `${symbol}-${tokenPublicKey}.json`;
-      // a.download = fileName;
-      // a.click();
-      // const saveDeployParamsSuccessMsg = (
-      //   <>
-      //     Token private keys have been saved to a{" "}
-      //     <a
-      //       href={url}
-      //       download={fileName}
-      //       className="text-accent hover:underline"
-      //       target="_blank"
-      //       rel="noopener noreferrer"
-      //     >
-      //       JSON file
-      //     </a>
-      //   </>
-      // );
-      // updateTimelineItem({
-      //   groupId: "verify",
-      //   update: {
-      //     lineId: "privateKeysSaved",
-      //     content: saveDeployParamsSuccessMsg,
-      //     status: "success",
-      //   },
-      // });
-      // setLikes((likes += 10));
-      // addLog({
-      //   groupId: "deploy",
-      //   status: "waiting",
-      //   title: `Launching token ${data.symbol}`,
-      //   successTitle: `Token ${data.symbol} launched`,
-      //   errorTitle: `Failed to launch token ${data.symbol}`,
-      //   lines: [messages.txPrepared],
-      //   requiredForSuccess: ["contractStateVerified"],
-      //   keepOnTop: true,
-      // });
+    // const tokenAddressMsg = (
+    //   <>
+    //     Token address:{" "}
+    //     <a
+    //       href={`${explorerAccountUrl()}${tokenPublicKey}`}
+    //       className="text-accent hover:underline"
+    //       target="_blank"
+    //       rel="noopener noreferrer"
+    //     >
+    //       {tokenPublicKey}
+    //     </a>
+    //   </>
+    // );
+    // updateTimelineItem({
+    //   groupId: "verify",
+    //   update: {
+    //     lineId: "tokenAddress",
+    //     content: tokenAddressMsg,
+    //     status: "success",
+    //   },
+    // });
+    // if (isError()) return;
+    // // Save the result to a JSON file
+    // const deployParams = {
+    //   symbol,
+    //   name,
+    //   description,
+    //   image: imageURL,
+    //   website,
+    //   telegram,
+    //   twitter,
+    //   discord,
+    //   tokenPrivateKey,
+    //   adminContractPrivateKey,
+    //   tokenPublicKey,
+    //   adminContractPublicKey,
+    //   adminPublicKey,
+    //   metadata: uri,
+    // };
+    // updateTimelineItem({
+    //   groupId: "verify",
+    //   update: messages.privateKeysSaved,
+    // });
+    // // TODO: save with password encryption
+    // const deployParamsJson = JSON.stringify(deployParams, null, 2);
+    // const blob = new Blob([deployParamsJson], { type: "application/json" });
+    // const url = URL.createObjectURL(blob);
+    // const a = document.createElement("a");
+    // a.href = url;
+    // const fileName = `${symbol}-${tokenPublicKey}.json`;
+    // a.download = fileName;
+    // a.click();
+    // const saveDeployParamsSuccessMsg = (
+    //   <>
+    //     Token private keys have been saved to a{" "}
+    //     <a
+    //       href={url}
+    //       download={fileName}
+    //       className="text-accent hover:underline"
+    //       target="_blank"
+    //       rel="noopener noreferrer"
+    //     >
+    //       JSON file
+    //     </a>
+    //   </>
+    // );
+    // updateTimelineItem({
+    //   groupId: "verify",
+    //   update: {
+    //     lineId: "privateKeysSaved",
+    //     content: saveDeployParamsSuccessMsg,
+    //     status: "success",
+    //   },
+    // });
+    // setLikes((likes += 10));
+    // addLog({
+    //   groupId: "deploy",
+    //   status: "waiting",
+    //   title: `Launching token ${data.symbol}`,
+    //   successTitle: `Token ${data.symbol} launched`,
+    //   errorTitle: `Failed to launch token ${data.symbol}`,
+    //   lines: [messages.txPrepared],
+    //   requiredForSuccess: ["contractStateVerified"],
+    //   keepOnTop: true,
+    // });
 
-      if (DEBUG) console.log("Mint result:", mintResult);
-      if (mintResult.success === false || mintResult.jobId === undefined) {
-        updateTimelineItem({
-          groupId: "deploy",
-          update: {
-            lineId: "deployTransactionError",
-            content:
-              mintResult.error ?? messages.deployTransactionError.content,
+    if (DEBUG) console.log("Mint result:", mintResult);
+    if (mintResult.success === false || mintResult.jobId === undefined) {
+      updateTimelineItem({
+        groupId: "deploy",
+        update: {
+          lineId: "deployTransactionError",
+          content: mintResult.error ?? messages.deployTransactionError.content,
+          status: "error",
+        },
+      });
+      log.error("launchToken: failed to deploy token", { mintResult });
+      await stopProcessUpdateRequests();
+      return;
+    }
+    if (isError()) {
+      addLog({
+        groupId: "error",
+        status: "error",
+        title: "Error minting NFT",
+        lines: [
+          {
+            lineId: "error",
+            content: "Error minting NFT",
             status: "error",
           },
-        });
-        log.error("launchToken: failed to deploy token", { mintResult });
-        await stopProcessUpdateRequests();
-        return;
-      }
-      if (isError()) {
-        addLog({
-          groupId: "error",
-          status: "error",
-          title: "Error minting NFT",
-          lines: [
-            {
-              lineId: "error",
-              content: "Error minting NFT",
-              status: "error",
-            },
-          ],
-        });
-        await stopProcessUpdateRequests();
-        return;
-      }
-      setLikes((likes += 10));
-      const mintJobId = mintResult.jobId;
-
-      const txIncluded = await waitForProveJob({
-        jobId: mintJobId,
-        groupId: "deploy",
-        updateTimelineItem,
-        type: "launch",
+        ],
       });
-
-      if (!txIncluded) {
-        addLog({
-          groupId: "error",
-          status: "error",
-          title: "Error launching token",
-          lines: [
-            {
-              lineId: "error",
-              content: "Transaction not included",
-              status: "error",
-            },
-          ],
-        });
-        log.error("launchToken: transaction not included", { txIncluded });
-        return;
-      }
-      setLikes((likes += 10));
-      // const contractVerified = await waitForContractVerification({
-      //   tokenAddress: tokenPublicKey,
-      //   adminContractAddress: adminContractPublicKey,
-      //   adminAddress: adminPublicKey,
-      //   tokenId,
-      //   groupId: "deploy",
-      //   updateTimelineItem,
-      //   info,
-      // });
-      // if (!contractVerified) {
-      //   addLog({
-      //     groupId: "error",
-      //     status: "error",
-      //     title: "Error launching token",
-      //     lines: [
-      //       {
-      //         lineId: "error",
-      //         content: "Contract verification failed",
-      //         status: "error",
-      //       },
-      //     ],
-      //   });
-      //   log.error("launchToken: contract verification failed", {
-      //     contractVerified,
-      //   });
-      //   await stopProcessUpdateRequests();
-      //   return;
-      // }
-
-      if (isError()) {
-        addLog({
-          groupId: "error",
-          status: "error",
-          title: "Error launching token",
-          lines: [
-            {
-              lineId: "error",
-              content: "Error launching token",
-              status: "error",
-            },
-          ],
-        });
-        log.error("launchToken: error launching token", { isErrorShown });
-        await stopProcessUpdateRequests();
-        return;
-      }
-
-      //     if (DEBUG) {
-      //       console.log("Minting tokens", mintItems);
-      //     }
-      //     setLikes((likes += 10));
-      //     log.info("launchToken: minting tokens", { mintItems });
-      //     let price = 10000;
-
-      //     if (mintItems.length > 0) {
-      //       const tokensToMint = mintItems.length;
-
-      //       const mintingTokensMsg = (
-      //         <>
-      //           Minting{" "}
-      //           <a
-      //             href={`${explorerTokenUrl()}/${tokenId}`}
-      //             className="text-accent hover:underline"
-      //             target="_blank"
-      //             rel="noopener noreferrer"
-      //           >
-      //             {symbol}
-      //           </a>{" "}
-      //           tokens to {mintItems.length} addresses...
-      //         </>
-      //       );
-      //       addLog({
-      //         groupId: "mint",
-      //         status: "waiting",
-      //         title: `Minting ${data.symbol} tokens`,
-      //         successTitle: `${data.symbol} tokens minted`,
-      //         errorTitle: `Failed to mint ${data.symbol} tokens`,
-      //         lines: [
-      //           {
-      //             lineId: "mintingTokens",
-      //             content: mintingTokensMsg,
-      //             status: "waiting",
-      //           },
-      //         ],
-      //         requiredForSuccess: ["mintingTokens", "minted"],
-      //         keepOnTop: true,
-      //       });
-
-      //       let nonce = await getAccountNonce(adminPublicKey);
-      //       let mintPromises: Promise<boolean>[] = [];
-      //       let supply = 0;
-
-      //       for (let i = 0; i < mintItems.length; i++) {
-      //         const item = mintItems[i];
-      //         const groupId = `minting-${symbol}-${i}`;
-      //         const amountMsg = (
-      //           <>
-      //             Amount: {item.amount}{" "}
-      //             <a
-      //               href={`${explorerTokenUrl()}${tokenId}`}
-      //               className="text-accent hover:underline"
-      //               target="_blank"
-      //               rel="noopener noreferrer"
-      //             >
-      //               {symbol}
-      //             </a>{" "}
-      //             tokens
-      //           </>
-      //         );
-      //         const tokenAddressMsg = (
-      //           <>
-      //             Address:{" "}
-      //             <a
-      //               href={`${explorerAccountUrl()}${item.address}`}
-      //               className="text-accent hover:underline"
-      //               target="_blank"
-      //               rel="noopener noreferrer"
-      //             >
-      //               {item.address}
-      //             </a>
-      //           </>
-      //         );
-      //         addLog({
-      //           groupId,
-      //           status: "waiting",
-      //           title: `Minting ${item.amount} ${data.symbol} tokens`,
-      //           successTitle: `${item.amount} ${data.symbol} tokens minted`,
-      //           errorTitle: `Failed to mint ${item.amount} ${data.symbol} tokens`,
-      //           lines: [
-      //             messages.txMint,
-      //             {
-      //               lineId: "amount",
-      //               content: amountMsg,
-      //               status: "success",
-      //             },
-      //             {
-      //               lineId: "address",
-      //               content: tokenAddressMsg,
-      //               status: "success",
-      //             },
-      //           ],
-      //           requiredForSuccess: ["txIncluded"],
-      //         });
-
-      //         /*
-      // export async function apiTokenTransaction(params: {
-      //   symbol: string;
-      //   updateTimelineItem: UpdateTimelineItemFunction;
-      //   sender: string;
-      //   nonce: number;
-      //   groupId: string;
-      //   action: TokenAction;
-      //   data: TransactionParams;
-
-      //         */
-
-      //         const mintParams: TokenMintTransactionParams = {
-      //           txType: "token:mint",
-      //           to: item.address,
-      //           amount: item.amount * 1_000_000_000,
-      //           tokenAddress: tokenPublicKey,
-      //           sender: adminPublicKey,
-      //           price,
-      //         };
-      //         price += Math.ceil((10000 * item.amount) / 100000);
-
-      //         const mintResult = await apiTokenTransaction({
-      //           symbol,
-      //           updateTimelineItem,
-      //           sender: adminPublicKey,
-      //           groupId,
-      //           action: "token:mint",
-      //           data: mintParams,
-      //           nonce: nonce++,
-      //           // tokenAddress: tokenPublicKey,
-      //           // adminContractAddress: adminContractPublicKey,
-      //           // adminAddress: adminPublicKey,
-      //           // to: item.address,
-      //           // amount: item.amount,
-      //           // nonce: nonce++,
-      //           // groupId,
-      //           // updateTimelineItem,
-      //           // symbol,
-      //           // lib,
-      //           // action: "mint",
-      //         });
-      //         if (mintResult.success === false || mintResult.jobId === undefined) {
-      //           break;
-      //         }
-      //         const mintJobId = mintResult.jobId;
-      //         supply += item.amount;
-      //         setTotalSupply(supply);
-      //         await sleep(1000);
-      //         showMintStatistics(tokensToMint);
-      //         await sleep(1000);
-      //         const waitForMintJobPromise = waitForProveJob({
-      //           jobId: mintJobId,
-      //           groupId,
-      //           updateTimelineItem,
-      //           type: "mint",
-      //           tokenAddress: tokenPublicKey,
-      //           accounts: [],
-      //         });
-      //         mintPromises.push(waitForMintJobPromise);
-      //         if (isError()) {
-      //           break;
-      //         }
-      //       }
-      //       while (!showMintStatistics(tokensToMint) && !isError()) {
-      //         await sleep(10000);
-      //       }
-      //       setLikes((likes += 10));
-
-      //       await Promise.all(mintPromises);
-      //       const statistics = getMintStatistics();
-      //       log.info("launchToken: finished", { data, statistics });
-      //       const mintedTokensMsg = (
-      //         <>
-      //           Successfully minted{" "}
-      //           <a
-      //             href={`${explorerTokenUrl()}${tokenId}`}
-      //             className="text-accent hover:underline"
-      //             target="_blank"
-      //             rel="noopener noreferrer"
-      //           >
-      //             {symbol}
-      //           </a>{" "}
-      //           tokens to {statistics.success} addresses
-      //         </>
-      //       );
-      //       updateTimelineItem({
-      //         groupId: "mint",
-      //         update: {
-      //           lineId: "mintingTokens",
-      //           content: mintedTokensMsg,
-      //           status: statistics.success === tokensToMint ? "success" : "error",
-      //         },
-      //       });
-      //     }
-      //     setLikes((likes += 10));
-      //     if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
-      //     setLikes((likes += 10));
-      //     await waitForArweaveMetadataTxPromise;
-      //     setLikes((likes += 10));
-
-      const duration = 10 * 1000; // 10 seconds
-      const end = Date.now() + duration;
-
-      const interval = setInterval(() => {
-        if (Date.now() > end) {
-          clearInterval(interval);
-          return;
-        }
-
-        confetti({
-          particleCount: 100,
-          startVelocity: 30,
-          spread: 360,
-          origin: {
-            x: Math.random(), // Random horizontal position
-            y: Math.random() - 0.2, // Random vertical position
-          },
-        });
-      }, 250); // Fire confetti every 250 milliseconds
       await stopProcessUpdateRequests();
+      return;
     }
+    setLikes((likes += 10));
+    const mintJobId = mintResult.jobId;
+
+    const txIncluded = await waitForProveJob({
+      jobId: mintJobId,
+      groupId: "deploy",
+      updateTimelineItem,
+      type: "launch",
+    });
+
+    if (!txIncluded) {
+      addLog({
+        groupId: "error",
+        status: "error",
+        title: "Error launching token",
+        lines: [
+          {
+            lineId: "error",
+            content: "Transaction not included",
+            status: "error",
+          },
+        ],
+      });
+      log.error("launchToken: transaction not included", { txIncluded });
+      return;
+    }
+    setLikes((likes += 10));
+    // const contractVerified = await waitForContractVerification({
+    //   tokenAddress: tokenPublicKey,
+    //   adminContractAddress: adminContractPublicKey,
+    //   adminAddress: adminPublicKey,
+    //   tokenId,
+    //   groupId: "deploy",
+    //   updateTimelineItem,
+    //   info,
+    // });
+    // if (!contractVerified) {
+    //   addLog({
+    //     groupId: "error",
+    //     status: "error",
+    //     title: "Error launching token",
+    //     lines: [
+    //       {
+    //         lineId: "error",
+    //         content: "Contract verification failed",
+    //         status: "error",
+    //       },
+    //     ],
+    //   });
+    //   log.error("launchToken: contract verification failed", {
+    //     contractVerified,
+    //   });
+    //   await stopProcessUpdateRequests();
+    //   return;
+    // }
+
+    if (isError()) {
+      addLog({
+        groupId: "error",
+        status: "error",
+        title: "Error launching token",
+        lines: [
+          {
+            lineId: "error",
+            content: "Error launching token",
+            status: "error",
+          },
+        ],
+      });
+      log.error("launchToken: error launching token", { isErrorShown });
+      await stopProcessUpdateRequests();
+      return;
+    }
+
+    //     if (DEBUG) {
+    //       console.log("Minting tokens", mintItems);
+    //     }
+    //     setLikes((likes += 10));
+    //     log.info("launchToken: minting tokens", { mintItems });
+    //     let price = 10000;
+
+    //     if (mintItems.length > 0) {
+    //       const tokensToMint = mintItems.length;
+
+    //       const mintingTokensMsg = (
+    //         <>
+    //           Minting{" "}
+    //           <a
+    //             href={`${explorerTokenUrl()}/${tokenId}`}
+    //             className="text-accent hover:underline"
+    //             target="_blank"
+    //             rel="noopener noreferrer"
+    //           >
+    //             {symbol}
+    //           </a>{" "}
+    //           tokens to {mintItems.length} addresses...
+    //         </>
+    //       );
+    //       addLog({
+    //         groupId: "mint",
+    //         status: "waiting",
+    //         title: `Minting ${data.symbol} tokens`,
+    //         successTitle: `${data.symbol} tokens minted`,
+    //         errorTitle: `Failed to mint ${data.symbol} tokens`,
+    //         lines: [
+    //           {
+    //             lineId: "mintingTokens",
+    //             content: mintingTokensMsg,
+    //             status: "waiting",
+    //           },
+    //         ],
+    //         requiredForSuccess: ["mintingTokens", "minted"],
+    //         keepOnTop: true,
+    //       });
+
+    //       let nonce = await getAccountNonce(adminPublicKey);
+    //       let mintPromises: Promise<boolean>[] = [];
+    //       let supply = 0;
+
+    //       for (let i = 0; i < mintItems.length; i++) {
+    //         const item = mintItems[i];
+    //         const groupId = `minting-${symbol}-${i}`;
+    //         const amountMsg = (
+    //           <>
+    //             Amount: {item.amount}{" "}
+    //             <a
+    //               href={`${explorerTokenUrl()}${tokenId}`}
+    //               className="text-accent hover:underline"
+    //               target="_blank"
+    //               rel="noopener noreferrer"
+    //             >
+    //               {symbol}
+    //             </a>{" "}
+    //             tokens
+    //           </>
+    //         );
+    //         const tokenAddressMsg = (
+    //           <>
+    //             Address:{" "}
+    //             <a
+    //               href={`${explorerAccountUrl()}${item.address}`}
+    //               className="text-accent hover:underline"
+    //               target="_blank"
+    //               rel="noopener noreferrer"
+    //             >
+    //               {item.address}
+    //             </a>
+    //           </>
+    //         );
+    //         addLog({
+    //           groupId,
+    //           status: "waiting",
+    //           title: `Minting ${item.amount} ${data.symbol} tokens`,
+    //           successTitle: `${item.amount} ${data.symbol} tokens minted`,
+    //           errorTitle: `Failed to mint ${item.amount} ${data.symbol} tokens`,
+    //           lines: [
+    //             messages.txMint,
+    //             {
+    //               lineId: "amount",
+    //               content: amountMsg,
+    //               status: "success",
+    //             },
+    //             {
+    //               lineId: "address",
+    //               content: tokenAddressMsg,
+    //               status: "success",
+    //             },
+    //           ],
+    //           requiredForSuccess: ["txIncluded"],
+    //         });
+
+    //         /*
+    // export async function apiTokenTransaction(params: {
+    //   symbol: string;
+    //   updateTimelineItem: UpdateTimelineItemFunction;
+    //   sender: string;
+    //   nonce: number;
+    //   groupId: string;
+    //   action: TokenAction;
+    //   data: TransactionParams;
+
+    //         */
+
+    //         const mintParams: TokenMintTransactionParams = {
+    //           txType: "token:mint",
+    //           to: item.address,
+    //           amount: item.amount * 1_000_000_000,
+    //           tokenAddress: tokenPublicKey,
+    //           sender: adminPublicKey,
+    //           price,
+    //         };
+    //         price += Math.ceil((10000 * item.amount) / 100000);
+
+    //         const mintResult = await apiTokenTransaction({
+    //           symbol,
+    //           updateTimelineItem,
+    //           sender: adminPublicKey,
+    //           groupId,
+    //           action: "token:mint",
+    //           data: mintParams,
+    //           nonce: nonce++,
+    //           // tokenAddress: tokenPublicKey,
+    //           // adminContractAddress: adminContractPublicKey,
+    //           // adminAddress: adminPublicKey,
+    //           // to: item.address,
+    //           // amount: item.amount,
+    //           // nonce: nonce++,
+    //           // groupId,
+    //           // updateTimelineItem,
+    //           // symbol,
+    //           // lib,
+    //           // action: "mint",
+    //         });
+    //         if (mintResult.success === false || mintResult.jobId === undefined) {
+    //           break;
+    //         }
+    //         const mintJobId = mintResult.jobId;
+    //         supply += item.amount;
+    //         setTotalSupply(supply);
+    //         await sleep(1000);
+    //         showMintStatistics(tokensToMint);
+    //         await sleep(1000);
+    //         const waitForMintJobPromise = waitForProveJob({
+    //           jobId: mintJobId,
+    //           groupId,
+    //           updateTimelineItem,
+    //           type: "mint",
+    //           tokenAddress: tokenPublicKey,
+    //           accounts: [],
+    //         });
+    //         mintPromises.push(waitForMintJobPromise);
+    //         if (isError()) {
+    //           break;
+    //         }
+    //       }
+    //       while (!showMintStatistics(tokensToMint) && !isError()) {
+    //         await sleep(10000);
+    //       }
+    //       setLikes((likes += 10));
+
+    //       await Promise.all(mintPromises);
+    //       const statistics = getMintStatistics();
+    //       log.info("launchToken: finished", { data, statistics });
+    //       const mintedTokensMsg = (
+    //         <>
+    //           Successfully minted{" "}
+    //           <a
+    //             href={`${explorerTokenUrl()}${tokenId}`}
+    //             className="text-accent hover:underline"
+    //             target="_blank"
+    //             rel="noopener noreferrer"
+    //           >
+    //             {symbol}
+    //           </a>{" "}
+    //           tokens to {statistics.success} addresses
+    //         </>
+    //       );
+    //       updateTimelineItem({
+    //         groupId: "mint",
+    //         update: {
+    //           lineId: "mintingTokens",
+    //           content: mintedTokensMsg,
+    //           status: statistics.success === tokensToMint ? "success" : "error",
+    //         },
+    //       });
+    //     }
+    //     setLikes((likes += 10));
+    //     if (waitForArweaveImageTxPromise) await waitForArweaveImageTxPromise;
+    //     setLikes((likes += 10));
+    //     await waitForArweaveMetadataTxPromise;
+    //     setLikes((likes += 10));
+
+    const duration = 10 * 1000; // 10 seconds
+    const end = Date.now() + duration;
+
+    const interval = setInterval(() => {
+      if (Date.now() > end) {
+        clearInterval(interval);
+        return;
+      }
+
+      confetti({
+        particleCount: 100,
+        startVelocity: 30,
+        spread: 360,
+        origin: {
+          x: Math.random(), // Random horizontal position
+          y: Math.random() - 0.2, // Random vertical position
+        },
+      });
+    }, 250); // Fire confetti every 250 milliseconds
+    await stopProcessUpdateRequests();
   } catch (error) {
     console.error("launchToken catch:", error);
     log.error("launchToken: error launching token", { error });
