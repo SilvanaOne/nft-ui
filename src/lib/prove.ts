@@ -1,6 +1,6 @@
 "use server";
 
-import { JobResult, TokenTransaction } from "@minatokens/api";
+import { JobResult, TokenTransaction } from "@silvana-one/api";
 import { getChain } from "./chain";
 
 const chain = getChain();

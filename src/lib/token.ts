@@ -3,7 +3,7 @@ import {
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
   TokenTransactionParams,
-} from "@minatokens/api";
+} from "@silvana-one/api";
 
 export type TokenAction = "mint" | "transfer" | "offer" | "bid" | "orderbook";
 
