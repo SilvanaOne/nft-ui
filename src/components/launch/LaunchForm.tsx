@@ -9,7 +9,7 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { checkAddress } from "@/lib/address";
 import { shortenString } from "@/lib/short";
-import { LaunchTokenData, MintAddress, TokenLinks } from "@/lib/token";
+import { LaunchCollectionData, MintAddress, TokenLinks } from "@/lib/token";
 import { MintAddressesModal } from "../modals/MintAddressesModal";
 import { checkAvailability, unavailableCountry } from "@/lib/availability";
 import { log } from "@/lib/log";
@@ -19,7 +19,7 @@ const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 export function LaunchForm({
   onLaunch,
 }: {
-  onLaunch: (data: LaunchTokenData) => void;
+  onLaunch: (data: LaunchCollectionData) => void;
 }) {
   const [image, setImage] = useState<File | undefined>(undefined);
   const [imageURL, setImageURL] = useState<string | undefined>(undefined);

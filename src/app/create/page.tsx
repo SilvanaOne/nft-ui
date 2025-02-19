@@ -1,7 +1,7 @@
 "use client";
 import TokenFooter from "@/components/footer/TokenFooter";
 //import TokenHeader from "@/components/headers/TokenHeader";
-import LaunchToken from "@/components/launch/LaunchToken";
+import LaunchToken from "@/components/launch/Create";
 import { FC } from "react";
 import { getSiteName } from "@/lib/chain";
 

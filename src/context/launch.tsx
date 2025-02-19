@@ -12,11 +12,11 @@ import {
   TimelineItemStatus,
   TimelineGroupStatus,
 } from "@/components/launch/TimeLine";
-import { LaunchTokenData } from "@/lib/token";
+import { LaunchCollectionData } from "@/lib/token";
 import { log } from "@/lib/log";
 interface LaunchTokenState {
   timelineItems: TimelineGroupDated[];
-  tokenData: LaunchTokenData | null;
+  tokenData: LaunchCollectionData | null;
   totalSupply: number;
   tokenAddress: string;
   likes: number;
@@ -24,7 +24,7 @@ interface LaunchTokenState {
 }
 
 type Action =
-  | { type: "SET_TOKEN_DATA"; payload: LaunchTokenData }
+  | { type: "SET_TOKEN_DATA"; payload: LaunchCollectionData }
   | { type: "SET_TIMELINE_GROUPS"; payload: TimelineGroupDated[] }
   | { type: "ADD_TIMELINE_GROUP"; payload: TimelineGroup }
   | {

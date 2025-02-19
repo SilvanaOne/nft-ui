@@ -25,7 +25,7 @@ export interface TokenLinks {
   website?: string;
 }
 
-export interface LaunchTokenData {
+export interface LaunchCollectionData {
   symbol: string;
   name?: string;
   description?: string;

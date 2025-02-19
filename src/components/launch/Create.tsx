@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 
 import { TokenProgress } from "./TokenProgress";
 import { LaunchForm } from "./LaunchForm";
-import { LaunchTokenData } from "@/lib/token";
+import { LaunchCollectionData } from "@/lib/token";
 import { useLaunchToken } from "@/context/launch";
 import {
   TimeLineItem,
@@ -120,7 +120,7 @@ const LaunchToken: React.FC = () => {
     // if (DEBUG) console.log("Updated statistics:", statistics);
   }, [state]);
 
-  const handleLaunchButtonClick = async (data: LaunchTokenData) => {
+  const handleLaunchButtonClick = async (data: LaunchCollectionData) => {
     if (DEBUG) console.log("Launching token:", data);
 
     dispatch({ type: "SET_TOKEN_DATA", payload: data });
