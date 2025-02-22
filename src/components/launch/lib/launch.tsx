@@ -8,7 +8,7 @@ import {
   getChain,
   getChainId,
 } from "@/lib/chain";
-import { getWalletInfo } from "@/lib/wallet";
+import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { getSystemInfo } from "@/lib/system-info";
 import { debug } from "@/lib/debug";
 import { sleep } from "@/lib/sleep";
@@ -30,6 +30,7 @@ import { waitForProveJob } from "./mina-tx";
 import { log } from "@/lib/log";
 import { LaunchNftCollectionStandardAdminParams } from "@silvana-one/api";
 const chain = getChain();
+const chainId = getChainId();
 const DEBUG = debug();
 
 interface UpdateRequest {
@@ -199,8 +200,24 @@ export async function launchNFT(params: {
     });
 
     if (DEBUG) console.log("launchToken: launching token:", data);
-    const walletInfo = await getWalletInfo();
+    let walletInfo = await getWalletInfo();
     if (DEBUG) console.log("launchToken: Wallet Info:", walletInfo);
+    if (!walletInfo.address || walletInfo.network !== chainId) {
+      await connectWallet();
+      walletInfo = await getWalletInfo();
+      if (!walletInfo.address || walletInfo.network !== chainId) {
+        updateTimelineItem({
+          groupId: "verify",
+          update: {
+            lineId: "noAuroWallet",
+            content: `Please connect to ${chain} network first`,
+            status: "error",
+          },
+        });
+        log.error("launchToken: no Auro wallet", { walletInfo });
+        return;
+      }
+    }
     const systemInfo = getSystemInfo();
     if (DEBUG) console.log("launchToken: System Info:", systemInfo);
     if (isError()) return;
