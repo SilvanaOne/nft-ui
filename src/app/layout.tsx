@@ -8,6 +8,8 @@ import "swiper/css";
 import TokenHeader from "@/components/headers/TokenHeader";
 import { usePathname } from "next/navigation";
 import { MintAddressesModal } from "@/components/modals/MintAddressesModal";
+import { TraitsModal } from "@/components/modals/TraitsModal";
+import { PermissionsModal } from "@/components/modals/PermissionsModal";
 import ModeChanger from "@/components/common/ModeChanger";
 import { LaunchTokenProvider } from "@/context/launch";
 import { TokenDetailsProvider } from "@/context/details";
@@ -62,6 +64,11 @@ export default function RootLayout({
                     <TokenHeader showSearch={showSearch} />
                     {children}
                     <MintAddressesModal onSubmit={() => {}} />
+                    <TraitsModal onSubmit={() => {}} />
+                    <PermissionsModal
+                      onSubmit={() => {}}
+                      mintType={"collection"}
+                    />
                   </TransactionStoreProvider>
                 </TokenDetailsProvider>
               </LaunchTokenProvider>

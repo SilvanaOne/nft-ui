@@ -6,9 +6,17 @@ export interface FileUploadProps {
   setImage: (image: File) => void;
   setImageURL: (url: string | undefined) => void;
   url?: string;
+  label?: string;
+  description?: string;
 }
 
-export function FileUpload({ setImage, setImageURL, url }: FileUploadProps) {
+export function FileUpload({
+  setImage,
+  setImageURL,
+  url,
+  label,
+  description,
+}: FileUploadProps) {
   const [dragging, setDragging] = useState<boolean>(false);
   //const [imagePreview, setImagePreview] = useState<string>(url || "/token.png");
 
@@ -94,10 +102,11 @@ export function FileUpload({ setImage, setImageURL, url }: FileUploadProps) {
       </div>
       <div className="mt-4">
         <span className="mb-3 block font-display text-sm text-jacarta-700 dark:text-white">
-          NFT collection image
+          {label ?? "NFT collection image"}
         </span>
         <p className="text-sm leading-normal dark:text-jacarta-300">
-          Upload an image or GIF (max 5MB). Drag and drop supported.
+          {description ??
+            "Upload an image or GIF (maximum size 5MB). You can drag and drop a file here or click to browse."}
         </p>
       </div>
     </>

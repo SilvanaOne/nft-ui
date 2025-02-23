@@ -29,6 +29,7 @@ import {
 import { waitForProveJob } from "./mina-tx";
 import { log } from "@/lib/log";
 import { LaunchNftCollectionStandardAdminParams } from "@silvana-one/api";
+import { pinImage, createIpfsURL } from "@/lib/ipfs";
 const chain = getChain();
 const chainId = getChainId();
 const DEBUG = debug();
@@ -103,17 +104,7 @@ export async function launchNFT(params: {
     isError,
     getMintStatistics,
   } = params;
-  const {
-    symbol,
-    name,
-    description,
-    links,
-    image,
-    imageURL,
-    adminAddress,
-    mintAddresses,
-  } = data;
-  const { twitter, telegram, website, discord, instagram, facebook } = links;
+  const { image, imageURL, banner, bannerURL } = data;
   let likes = 0;
   log.error("launchCollection: starting", { data });
   if (DEBUG) console.log("launchCollection: starting", { data });
@@ -196,7 +187,7 @@ export async function launchNFT(params: {
       successTitle: `NFT collection data for ${data.symbol} verified`,
       errorTitle: `Failed to verify NFT collection data for ${data.symbol}`,
       lines: [messages.verifyData],
-      requiredForSuccess: ["verifyData", "privateKeysSaved"],
+      requiredForSuccess: ["verifyData", "privateKeysSaved", "image"],
     });
 
     if (DEBUG) console.log("launchToken: launching token:", data);
@@ -295,70 +286,171 @@ export async function launchNFT(params: {
 
     let imageHash: string | undefined = undefined;
     let imageExtension: string | undefined = undefined;
-    if (image) {
-      addLog({
-        groupId: "image",
-        status: "waiting",
-        title: `Pinning token image for ${data.symbol}`,
-        successTitle: `Token image for ${data.symbol} pinned`,
-        errorTitle: `Failed to pin token image for ${data.symbol}`,
-        lines: [messages.pinningImage],
-        requiredForSuccess: ["pinningImage"],
+    let bannerHash: string | undefined = undefined;
+    let bannerExtension: string | undefined = undefined;
+
+    if (banner) {
+      updateTimelineItem({
+        groupId: "verify",
+        update: messages.banner,
       });
 
-      // const base64 = await readFileAsync(image);
-      // imageHash = await pinBase64ImageToArweave(base64);
-      // imageExtension = image?.name?.split(".")?.pop();
-      // if (imageHash) {
-      //   const imageTxMessage = (
-      //     <>
-      //       <a
-      //         href={`https://arscan.io/tx/${imageHash}`}
-      //         className="text-accent hover:underline"
-      //         target="_blank"
-      //         rel="noopener noreferrer"
-      //       >
-      //         Transaction
-      //       </a>{" "}
-      //       is sent to Arweave
-      //     </>
-      //   );
-      //   updateTimelineItem({
-      //     groupId: "image",
-      //     update: {
-      //       lineId: "arweaveTx",
-      //       content: imageTxMessage,
-      //       status: "success",
-      //     },
-      //   });
-
+      const base64 = await readFileAsync(banner);
+      bannerHash = await pinImage({ imageBase64: base64 });
+      bannerExtension = banner?.name?.split(".")?.pop();
+      if (bannerHash) {
+        const bannerTxMessage = (
+          <>
+            <a
+              href={await createIpfsURL({ hash: bannerHash })}
+              className="text-accent hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Banner
+            </a>{" "}
+            is pinned to IPFS
+          </>
+        );
+        updateTimelineItem({
+          groupId: "verify",
+          update: {
+            lineId: "banner",
+            content: bannerTxMessage,
+            status: "success",
+          },
+        });
+      } else {
+        updateTimelineItem({
+          groupId: "verify",
+          update: {
+            lineId: "banner",
+            content: "Failed to pin NFT banner",
+            status: "error",
+          },
+        });
+        log.error("launch: failed to pin banner", { bannerHash });
+        return;
+      }
+    } else if (bannerURL) {
+      const bannerTxMessage = (
+        <>
+          <a
+            href={bannerURL}
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Banner
+          </a>{" "}
+          is ready.
+        </>
+      );
       updateTimelineItem({
-        groupId: "image",
+        groupId: "verify",
         update: {
-          lineId: "pinningImage",
-          content: "NFT image is uploaded to IPFS",
+          lineId: "banner",
+          content: bannerTxMessage,
           status: "success",
         },
       });
     }
-    //     updateTimelineItem({
-    //       groupId: "image",
-    //       update: messages.arweaveIncluded,
-    //     });
-    //   } else {
-    //     updateTimelineItem({
-    //       groupId: "image",
-    //       update: {
-    //         lineId: "pinningImage",
-    //         content:
-    //           "Failed to upload token image to Arweave permanent storage",
-    //         status: "error",
-    //       },
-    //     });
-    //     log.error("launchToken: failed to pin image", { imageHash });
-    //     return;
-    //   }
-    // }
+    if (image) {
+      updateTimelineItem({
+        groupId: "verify",
+        update: messages.image,
+      });
+
+      const base64 = await readFileAsync(image);
+      imageHash = await pinImage({ imageBase64: base64 });
+      imageExtension = image?.name?.split(".")?.pop();
+      if (imageHash) {
+        const imageTxMessage = (
+          <>
+            <a
+              href={await createIpfsURL({ hash: imageHash })}
+              className="text-accent hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Image
+            </a>{" "}
+            is pinned to IPFS
+          </>
+        );
+        updateTimelineItem({
+          groupId: "verify",
+          update: {
+            lineId: "image",
+            content: imageTxMessage,
+            status: "success",
+          },
+        });
+      } else {
+        updateTimelineItem({
+          groupId: "verify",
+          update: {
+            lineId: "image",
+            content: "Failed to pin NFT image",
+            status: "error",
+          },
+        });
+        log.error("launch: failed to pin image", { imageHash });
+        return;
+      }
+    } else if (imageURL) {
+      const imageTxMessage = (
+        <>
+          <a
+            href={imageURL}
+            className="text-accent hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Image
+          </a>{" "}
+          is ready.
+        </>
+      );
+      updateTimelineItem({
+        groupId: "verify",
+        update: {
+          lineId: "image",
+          content: imageTxMessage,
+          status: "success",
+        },
+      });
+    }
+    const bannerImage = bannerHash
+      ? await createIpfsURL({ hash: bannerHash })
+      : bannerURL;
+    if (!bannerImage) {
+      updateTimelineItem({
+        groupId: "verify",
+        update: {
+          lineId: "banner",
+          content: "No banner provided",
+          status: "error",
+        },
+      });
+      log.error("launch: no banner provided");
+      return;
+    }
+    const nftImage = imageHash
+      ? await createIpfsURL({ hash: imageHash })
+      : imageURL;
+    if (!nftImage) {
+      updateTimelineItem({
+        groupId: "verify",
+        update: {
+          lineId: "image",
+          content: "No image provided",
+          status: "error",
+        },
+      });
+      log.error("launch: no image provided");
+      return;
+    }
     if (isError()) return;
 
     // const imageURL = imageHash
@@ -503,7 +595,9 @@ export async function launchNFT(params: {
     });
 
     const mintResult = await mintNFT({
-      symbol,
+      data,
+      image: nftImage,
+      banner: bannerImage,
       sender: walletInfo.address,
       updateTimelineItem,
       groupId: "deploy",

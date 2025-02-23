@@ -17,12 +17,15 @@ import {
   randomText,
 } from "@/lib/random";
 import { LaunchNftCollectionStandardAdminParams } from "@silvana-one/api";
+import { LaunchCollectionData } from "@/lib/token";
 const DEBUG = debug();
 const chain = getChain();
 const WALLET = getWallet();
 
 export async function mintNFT(params: {
-  symbol: string;
+  data: LaunchCollectionData;
+  image: string;
+  banner: string;
   sender: string;
   updateTimelineItem: UpdateTimelineItemFunction;
   groupId: GroupId;
@@ -32,7 +35,9 @@ export async function mintNFT(params: {
   error?: string;
   jobId?: string;
 }> {
-  const { symbol, sender, updateTimelineItem, groupId, mintType } = params;
+  const { data, sender, image, banner, updateTimelineItem, groupId, mintType } =
+    params;
+  const { symbol, name, description, adminAddress, traits } = data;
 
   try {
     const mina = (window as any).mina;
@@ -60,21 +65,15 @@ export async function mintNFT(params: {
         },
         metadata: {
           name: collectionName,
-          image: randomImage(),
-          banner: randomBanner(),
-          description: randomText(),
-          traits: [
-            {
-              key: "Collection Trait 1",
-              type: "string",
-              value: "Collection Value 1",
-            },
-            {
-              key: "Collection Trait 2",
-              type: "string",
-              value: "Collection Value 2",
-            },
-          ],
+          image,
+          banner,
+          description,
+          traits: traits.map((trait) => ({
+            key: trait.key,
+            value: trait.value,
+            isPrivate: trait.isPrivate,
+            type: "string",
+          })),
         },
       },
     };

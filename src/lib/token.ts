@@ -16,24 +16,116 @@ export interface MintAddressVerified {
   amount: number;
   address: string;
 }
-export interface TokenLinks {
-  twitter?: string;
-  discord?: string;
-  telegram?: string;
-  instagram?: string;
-  facebook?: string;
-  website?: string;
+
+export interface Trait {
+  key: string;
+  value: string;
+  isPrivate?: boolean;
+}
+
+export class NftPermissions {
+  owner: string | undefined;
+  id?: bigint | string;
+  canChangeOwnerByProof?: boolean;
+  canTransfer?: boolean;
+  canApprove?: boolean;
+  canChangeMetadata?: boolean;
+  canChangeStorage?: boolean;
+  canChangeName?: boolean;
+  canChangeMetadataVerificationKeyHash?: boolean;
+  canPause?: boolean;
+  isPaused?: boolean;
+  requireOwnerAuthorizationToUpgrade?: boolean;
+  metadataVerificationKeyHash: string | undefined;
+
+  constructor() {
+    this.owner = undefined;
+    this.id = undefined;
+    this.canChangeOwnerByProof = false;
+    this.canTransfer = true;
+    this.canApprove = true;
+    this.canChangeMetadata = false;
+    this.canChangeStorage = false;
+    this.canChangeName = false;
+    this.canChangeMetadataVerificationKeyHash = false;
+    this.canPause = true;
+    this.isPaused = false;
+    this.requireOwnerAuthorizationToUpgrade = false;
+    this.metadataVerificationKeyHash = undefined;
+  }
+
+  isEqual(other: NftPermissions): boolean {
+    return (
+      this.owner === other.owner &&
+      this.id === other.id &&
+      this.canChangeOwnerByProof === other.canChangeOwnerByProof &&
+      this.canTransfer === other.canTransfer &&
+      this.canApprove === other.canApprove &&
+      this.canChangeMetadata === other.canChangeMetadata &&
+      this.canChangeStorage === other.canChangeStorage &&
+      this.canChangeName === other.canChangeName &&
+      this.canChangeMetadataVerificationKeyHash ===
+        other.canChangeMetadataVerificationKeyHash &&
+      this.canPause === other.canPause &&
+      this.isPaused === other.isPaused &&
+      this.requireOwnerAuthorizationToUpgrade ===
+        other.requireOwnerAuthorizationToUpgrade &&
+      this.metadataVerificationKeyHash === other.metadataVerificationKeyHash
+    );
+  }
+
+  isDefault(): boolean {
+    const defaultPermissions = new NftPermissions();
+    return this.isEqual(defaultPermissions);
+  }
+}
+
+export class CollectionPermissions {
+  royaltyFee?: number;
+  transferFee?: number | bigint | string;
+  requireTransferApproval?: boolean;
+  mintingIsLimited?: boolean;
+
+  constructor() {
+    this.royaltyFee = undefined;
+    this.transferFee = undefined;
+    this.requireTransferApproval = false;
+    this.mintingIsLimited = false;
+  }
+
+  isEqual(other: CollectionPermissions): boolean {
+    return (
+      this.royaltyFee === other.royaltyFee &&
+      this.transferFee === other.transferFee &&
+      this.requireTransferApproval === other.requireTransferApproval &&
+      this.mintingIsLimited === other.mintingIsLimited
+    );
+  }
+
+  isDefault(): boolean {
+    const defaultPermissions = new CollectionPermissions();
+    return this.isEqual(defaultPermissions);
+  }
+}
+
+export interface Permissions {
+  nft: NftPermissions;
+  collection: CollectionPermissions;
 }
 
 export interface LaunchCollectionData {
+  mintType: "collection" | "nft";
   symbol: string;
-  name?: string;
+  name: string;
   description?: string;
-  links: TokenLinks;
   image?: File;
   imageURL?: string;
+  banner?: File;
+  bannerURL?: string;
   adminAddress: string;
-  mintAddresses: MintAddress[];
+  traits: Trait[];
+  nftPermissions?: NftPermissions;
+  collectionPermissions?: CollectionPermissions;
 }
 
 export type TokenActionTransactionParams = Exclude<

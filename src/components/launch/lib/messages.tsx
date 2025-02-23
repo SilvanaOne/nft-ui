@@ -16,8 +16,8 @@ export type LineId =
   | "adminRequired"
   | "adminAddressDoNotMatch"
   | "noAuroWallet"
-  | "pinningImage"
-  | "pinningMetadata"
+  | "image"
+  | "banner"
   | "privateKeysGenerated"
   | "privateKeysSaved"
   | "txPrepared"
@@ -93,14 +93,14 @@ export const messages: { [key in LineId]: TimeLineItem } = {
     content: "No Auro Wallet found",
     status: "error",
   },
-  pinningImage: {
-    lineId: "pinningImage",
-    content: "Uploading token image to Arweave...",
+  image: {
+    lineId: "image",
+    content: "Uploading NFT image to IPFS...",
     status: "waiting",
   },
-  pinningMetadata: {
-    lineId: "pinningMetadata",
-    content: "Uploading token metadata to Arweave...",
+  banner: {
+    lineId: "banner",
+    content: "Uploading NFT collection banner to IPFS...",
     status: "waiting",
   },
   privateKeysGenerated: {
