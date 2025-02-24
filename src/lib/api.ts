@@ -51,19 +51,27 @@ export async function getNFTInfo(params: {
   return { success: true, info };
 }
 
+export interface MintTransaction {
+  mintType: "collection" | "nft";
+  tx: NftTransaction;
+  collectionAddress: string;
+  collectionName: string;
+  privateMetadata: string;
+  metadataFileName: string;
+  privateKeys: string;
+  keysFileName: string;
+  storage: string;
+  metadataRoot: string;
+  nftName: string;
+  nftAddress: string;
+}
+
 export async function buildCollectionLaunchTransaction(
   params: LaunchNftCollectionStandardAdminParams
 ): Promise<
   | {
       success: true;
-      tx: NftTransaction;
-      collectionAddress: string;
-      privateMetadata: string;
-      metadataFileName: string;
-      privateKeys: string;
-      keysFileName: string;
-      storage: string;
-      metadataRoot: string;
+      tx: MintTransaction;
     }
   | {
       success: false;
@@ -125,14 +133,20 @@ export async function buildCollectionLaunchTransaction(
 
   return {
     success: true,
-    tx,
-    collectionAddress,
-    privateMetadata,
-    metadataFileName,
-    privateKeys,
-    keysFileName,
-    storage: tx.storage,
-    metadataRoot: tx.metadataRoot,
+    tx: {
+      mintType: "collection",
+      tx,
+      collectionAddress,
+      collectionName: tx.collectionName,
+      privateMetadata,
+      metadataFileName,
+      privateKeys,
+      keysFileName,
+      storage: tx.storage,
+      metadataRoot: tx.metadataRoot,
+      nftName: tx.nftName,
+      nftAddress: collectionAddress,
+    },
   };
 }
 
@@ -141,15 +155,7 @@ export async function buildMintTransaction(
 ): Promise<
   | {
       success: true;
-      tx: NftTransaction;
-      privateMetadata: string | undefined;
-      metadataFileName: string | undefined;
-      privateKeys: string | undefined;
-      keysFileName: string | undefined;
-      collectionName: string;
-      nftName: string;
-      nftAddress: string;
-      collectionAddress: string;
+      tx: MintTransaction;
     }
   | {
       success: false;
@@ -162,6 +168,11 @@ export async function buildMintTransaction(
     })
   ).data;
   if (!tx) return { success: false, error: "Failed to build transaction" };
+  if (!tx.privateMetadata)
+    return { success: false, error: "Failed to get private metadata" };
+  if (!tx.storage) return { success: false, error: "Failed to get storage" };
+  if (!tx.metadataRoot)
+    return { success: false, error: "Failed to get metadata root" };
 
   const collectionAddress = tx?.request?.collectionAddress;
   if (!collectionAddress)
@@ -178,56 +189,59 @@ export async function buildMintTransaction(
   if (!nftName) {
     return { success: false, error: "Failed to get NFT name" };
   }
+  if (!collectionAddress) {
+    return { success: false, error: "Failed to get collection address" };
+  }
+  if (!nftAddress) {
+    return { success: false, error: "Failed to get NFT address" };
+  }
   console.log("NFT address:", nftAddress);
   console.log("NFT collection address:", collectionAddress);
   console.log("NFT collection name:", collectionName);
   console.log("Storage address:", tx?.storage);
   console.log("Metadata root:", tx?.metadataRoot);
-  let privateMetadata: string | undefined = undefined;
-  let metadataFileName: string | undefined = undefined;
-  let privateKeys: string | undefined = undefined;
-  let keysFileName: string | undefined = undefined;
 
-  if (tx?.privateMetadata && collectionAddress && nftAddress) {
-    metadataFileName = `nft-${collectionAddress}-${nftAddress}-metadata.json`;
-    privateMetadata = tx.privateMetadata;
-    // Remove private metadata from the transaction
-    tx.privateMetadata = undefined;
+  const metadataFileName = `nft-${collectionAddress}-${nftAddress}-metadata.json`;
+  const privateMetadata = tx.privateMetadata;
+  // Remove private metadata from the transaction
+  tx.privateMetadata = undefined;
+
+  const keysFileName = `nft-${collectionAddress}-${nftAddress}-keys.json`;
+  const privateKeys = JSON.stringify(
+    {
+      nftName,
+      collectionName: tx?.collectionName,
+      collectionAddress,
+      nftAddress,
+      nftContractPrivateKey: nftMintParams?.addressPrivateKey,
+      storage: tx?.storage,
+      metadataRoot: tx?.metadataRoot,
+    },
+    null,
+    2
+  );
+  // Remove private keys from the request
+  if ((tx?.request as NftMintTransactionParams).nftMintParams) {
+    (tx?.request as NftMintTransactionParams).nftMintParams.addressPrivateKey =
+      undefined;
   }
 
-  if (collectionAddress) {
-    keysFileName = `nft-${collectionAddress}-${nftAddress}-keys.json`;
-    privateKeys = JSON.stringify(
-      {
-        nftName,
-        collectionName: tx?.collectionName,
-        collectionAddress,
-        nftAddress,
-        nftContractPrivateKey: nftMintParams?.addressPrivateKey,
-        storage: tx?.storage,
-        metadataRoot: tx?.metadataRoot,
-      },
-      null,
-      2
-    );
-    // Remove private keys from the request
-    if ((tx?.request as NftMintTransactionParams).nftMintParams) {
-      (
-        tx?.request as NftMintTransactionParams
-      ).nftMintParams.addressPrivateKey = undefined;
-    }
-  }
   return {
     success: true,
-    tx,
-    privateMetadata,
-    metadataFileName,
-    privateKeys,
-    keysFileName,
-    collectionName,
-    nftName,
-    nftAddress,
-    collectionAddress,
+    tx: {
+      mintType: "nft",
+      tx,
+      privateMetadata,
+      metadataFileName,
+      privateKeys,
+      keysFileName,
+      collectionName,
+      nftName,
+      nftAddress,
+      collectionAddress,
+      storage: tx.storage,
+      metadataRoot: tx.metadataRoot,
+    },
   };
 }
 

@@ -114,6 +114,7 @@ export interface Permissions {
 
 export interface LaunchCollectionData {
   mintType: "collection" | "nft";
+  collectionAddress?: string;
   symbol: string;
   name: string;
   description?: string;

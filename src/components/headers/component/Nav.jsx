@@ -28,14 +28,14 @@ export default function Nav() {
       {siteType === "nft" && (
         <li className="group">
           <Link
-            href="/mint"
+            href="/"
             className={`flex items-center justify-between py-3.5 font-display text-base  ${
-              "/launch".split("/")[1] == pathname.split("/")[1]
+              "/".split("/")[1] == pathname.split("/")[1]
                 ? "text-accent dark:text-accent"
                 : "text-jacarta-700 dark:text-white"
             }  hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
           >
-            Mint
+            Explore
           </Link>
         </li>
       )}

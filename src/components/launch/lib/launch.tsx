@@ -108,8 +108,8 @@ export async function launchNFT(params: {
   } = params;
   const { image, imageURL, banner, bannerURL, mintType } = data;
   let likes = 0;
-  log.error("launchCollection: starting", { data });
-  if (DEBUG) console.log("launchCollection: starting", { data });
+  log.info("launchNFT: starting", { data });
+  if (DEBUG) console.log("launchNFT: starting", { data });
 
   startProcessUpdateRequests(updateTimeLineItemInternal);
 
@@ -199,6 +199,20 @@ export async function launchNFT(params: {
       keepOnTop: true,
     });
 
+    if (mintType === "nft" && !data.collectionAddress) {
+      updateTimelineItem({
+        groupId: "deploy",
+        update: {
+          lineId: "noCollectionAddress",
+          content: "Please select a collection first",
+          status: "error",
+        },
+      });
+      log.error("launchToken: no collection address provided", { data });
+      await stopProcessUpdateRequests();
+      return;
+    }
+
     if (DEBUG) console.log("launchToken: launching token:", data);
     let walletInfo = await getWalletInfo();
     if (DEBUG) console.log("launchToken: Wallet Info:", walletInfo);
@@ -250,7 +264,6 @@ export async function launchNFT(params: {
       return;
     }
     if (isError()) return;
-    setLikes((likes += 10));
 
     // const mintItems: MintAddressVerified[] = [];
     // if (DEBUG) console.log("Mint addresses:", mintAddresses);
@@ -439,7 +452,7 @@ export async function launchNFT(params: {
     const bannerImage = bannerHash
       ? await publicIpfsURL({ hash: bannerHash })
       : bannerURL;
-    if (!bannerImage) {
+    if (!bannerImage && mintType === "collection") {
       updateTimelineItem({
         groupId: "deploy",
         update: {
@@ -479,7 +492,6 @@ export async function launchNFT(params: {
       sender: walletInfo.address,
       updateTimelineItem,
       groupId: "deploy",
-      mintType: "collection",
     });
 
     if (DEBUG)

@@ -9,9 +9,15 @@ import {
 import { debug } from "@/lib/debug";
 import { getChain, getWallet } from "@/lib/chain";
 import { log } from "@/lib/log";
-import { buildCollectionLaunchTransaction, proveTransaction } from "@/lib/api";
+import {
+  buildCollectionLaunchTransaction,
+  proveTransaction,
+  MintTransaction,
+  buildMintTransaction,
+} from "@/lib/api";
 import {
   LaunchNftCollectionStandardAdminParams,
+  NftMintTransactionParams,
   NftTransaction,
 } from "@silvana-one/api";
 import { LaunchCollectionData } from "@/lib/token";
@@ -22,11 +28,10 @@ const WALLET = getWallet();
 export async function mintNFT(params: {
   data: LaunchCollectionData;
   image: string;
-  banner: string;
+  banner: string | undefined;
   sender: string;
   updateTimelineItem: UpdateTimelineItemFunction;
   groupId: GroupId;
-  mintType: "collection" | "nft";
 }): Promise<
   | {
       success: false;
@@ -45,84 +50,188 @@ export async function mintNFT(params: {
       metadataRoot: string;
     }
 > {
-  const { data, sender, image, banner, updateTimelineItem, groupId, mintType } =
-    params;
-  const { symbol, name, description, adminAddress, traits } = data;
+  const { data, sender, image, banner, updateTimelineItem, groupId } = params;
+  const { symbol, name, description, adminAddress, traits, mintType } = data;
 
   try {
     const mina = (window as any).mina;
     if (mina === undefined || mina?.isAuro !== true) {
       log.error("deployToken: no Auro Wallet found");
-      throw new Error("No Auro Wallet found");
-    }
-
-    const collectionName = data.name;
-    console.log(`Launching new NFT collection ${collectionName}...`, {
-      sender,
-      collectionName,
-    });
-
-    const collectionLaunchParams: LaunchNftCollectionStandardAdminParams = {
-      txType: "nft:launch",
-      collectionName,
-      collectionData: {
-        ...(data.collectionPermissions ?? {}),
-        transferFee: data.collectionPermissions?.transferFee
-          ? Number(data.collectionPermissions.transferFee)
-          : undefined,
-      },
-      sender,
-      adminContract: "standard",
-      symbol: "NFT",
-      masterNFT: {
-        name: collectionName,
-        data: {
-          ...(data.nftPermissions ?? {}),
-          owner: sender,
-          id: data.nftPermissions?.id
-            ? data.nftPermissions.id.toString()
-            : undefined,
-        },
-        metadata: {
-          name: collectionName,
-          image,
-          banner,
-          description,
-          traits: traits.map((trait) => ({
-            key: trait.key,
-            value: trait.value,
-            isPrivate: trait.isPrivate,
-            type: "string",
-          })),
-        },
-      },
-    };
-
-    if (DEBUG)
-      console.log("launchCollection: building tx", {
-        collectionLaunchParams,
-      });
-    const launchReply = await buildCollectionLaunchTransaction(
-      collectionLaunchParams
-    );
-    if (!launchReply.success) {
-      if (DEBUG)
-        console.log("Error in launchCollection", { error: launchReply.error });
-      log.error("Error in launchCollection", { error: launchReply.error });
       updateTimelineItem({
         groupId,
         update: {
           lineId: "error",
-          content: launchReply.error,
+          content: "No Auro Wallet found",
           status: "error",
         },
       });
       return {
         success: false,
-        error: launchReply.error,
+        error: "No Auro Wallet found",
       };
     }
 
+    let reply: MintTransaction | undefined = undefined;
+
+    if (mintType === "collection") {
+      const collectionName = data.name;
+      console.log(`Launching new NFT collection ${collectionName}...`, {
+        sender,
+        collectionName,
+      });
+
+      const collectionLaunchParams: LaunchNftCollectionStandardAdminParams = {
+        txType: "nft:launch",
+        collectionName,
+        collectionData: {
+          ...(data.collectionPermissions ?? {}),
+          transferFee: data.collectionPermissions?.transferFee
+            ? Number(data.collectionPermissions.transferFee)
+            : undefined,
+        },
+        sender,
+        adminContract: "standard",
+        symbol: "NFT",
+        masterNFT: {
+          name: collectionName,
+          data: {
+            ...(data.nftPermissions ?? {}),
+            owner: sender,
+            id: data.nftPermissions?.id
+              ? data.nftPermissions.id.toString()
+              : undefined,
+          },
+          metadata: {
+            name: collectionName,
+            image,
+            banner,
+            description,
+            traits: traits.map((trait) => ({
+              key: trait.key,
+              value: trait.value,
+              isPrivate: trait.isPrivate,
+              type: "string",
+            })),
+          },
+        },
+      };
+
+      if (DEBUG)
+        console.log("launchCollection: building tx", {
+          collectionLaunchParams,
+        });
+      const launchReply = await buildCollectionLaunchTransaction(
+        collectionLaunchParams
+      );
+      if (!launchReply.success) {
+        if (DEBUG)
+          console.log("Error in launchCollection", {
+            error: launchReply.error,
+          });
+        log.error("Error in launchCollection", { error: launchReply.error });
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "error",
+            content: launchReply.error,
+            status: "error",
+          },
+        });
+        return {
+          success: false,
+          error: launchReply.error,
+        };
+      }
+      reply = launchReply.tx;
+    }
+
+    if (mintType === "nft") {
+      console.log(`new NFT collection ${data.name}...`, {
+        sender,
+      });
+
+      if (!data.collectionAddress) {
+        log.error("mintNFT: Collection address is not set");
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "error",
+            content: "Collection address is not set",
+            status: "error",
+          },
+        });
+        return {
+          success: false,
+          error: "Collection address is not set",
+        };
+      }
+      const mintParams: NftMintTransactionParams = {
+        txType: "nft:mint",
+        sender,
+        collectionAddress: data.collectionAddress,
+        nftMintParams: {
+          name: data.name,
+          data: {
+            ...(data.nftPermissions ?? {}),
+            owner: sender,
+            id: data.nftPermissions?.id
+              ? data.nftPermissions.id.toString()
+              : undefined,
+          },
+          metadata: {
+            name: data.name,
+            image,
+            banner,
+            description,
+            traits: traits.map((trait) => ({
+              key: trait.key,
+              value: trait.value,
+              isPrivate: trait.isPrivate,
+              type: "string",
+            })),
+          },
+        },
+      };
+
+      if (DEBUG)
+        console.log("Mint NFT: building tx", {
+          mintParams,
+        });
+      const mintReply = await buildMintTransaction(mintParams);
+      if (!mintReply.success) {
+        if (DEBUG)
+          console.log("Error in mintNFT", {
+            error: mintReply.error,
+          });
+        log.error("Error in mintNFT", { error: mintReply.error });
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "error",
+            content: mintReply.error,
+            status: "error",
+          },
+        });
+        return {
+          success: false,
+          error: mintReply.error,
+        };
+      }
+      reply = mintReply.tx;
+    }
+
+    if (!reply) {
+      log.error("mintNFT: Failed to build transaction");
+      updateTimelineItem({
+        groupId,
+        update: {
+          lineId: "error",
+          content: "Failed to build transaction",
+          status: "error",
+        },
+      });
+      return { success: false, error: "Failed to build transaction" };
+    }
     updateTimelineItem({
       groupId,
       update: {
@@ -139,7 +248,7 @@ export async function mintNFT(params: {
       update: messages.txSigned,
     });
 
-    const payloads = launchReply.tx;
+    const payloads = reply.tx;
     const txResult = await mina?.sendTransaction(payloads.walletPayload);
     if (DEBUG) console.log("Transaction result", txResult);
     payloads.signedData = txResult?.signedData;
@@ -225,8 +334,6 @@ export async function mintNFT(params: {
       },
     });
 
-    const reply = launchReply;
-
     return {
       success: true,
       jobId,
@@ -237,7 +344,7 @@ export async function mintNFT(params: {
       keysFileName: reply.keysFileName,
       storage: reply.storage,
       metadataRoot: reply.metadataRoot,
-      nftAddress: undefined,
+      nftAddress: reply.nftAddress,
     };
   } catch (error: any) {
     console.error("Error in deployToken", error);

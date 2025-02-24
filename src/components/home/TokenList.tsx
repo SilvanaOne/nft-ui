@@ -111,9 +111,6 @@ export default function TokenList({
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
 
-  console.log("itemsToDisplay", itemsToDisplay);
-  console.log("state", state);
-
   function setListSelectedCollection(collection: string | undefined) {
     setSelectedCollection(collection);
   }

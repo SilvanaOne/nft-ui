@@ -18,6 +18,8 @@ import {
   randomImage,
 } from "@/lib/random";
 import { PermissionsModal } from "../modals/PermissionsModal";
+import { CollectionInfo } from "@silvana-one/api";
+import { algoliaGetCollectionList } from "@/lib/search";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 export function LaunchForm({
@@ -46,6 +48,10 @@ export function LaunchForm({
   const [addressValid, setAddressValid] = useState<boolean>(false);
   const [imageGenerating, setImageGenerating] = useState<boolean>(false);
   const [imageError, setImageError] = useState<string | undefined>(undefined);
+  const [collections, setCollections] = useState<CollectionInfo[]>([]);
+  const [collectionAddress, setCollectionAddress] = useState<
+    string | undefined
+  >(undefined);
   const { address, setAddress } = useContext(AddressContext);
 
   async function addressChanged(address: string | undefined) {
@@ -85,6 +91,25 @@ export function LaunchForm({
 
   useEffect(() => {
     addressChanged(address);
+  }, [address]);
+
+  useEffect(() => {
+    async function getCollections() {
+      if (!address) {
+        setCollections([]);
+        return;
+      }
+      const collections = (
+        await algoliaGetCollectionList({
+          creator: address,
+        })
+      ).sort((a, b) => b.updated - a.updated);
+      setCollections(collections);
+      if (collections.length > 0) {
+        setCollectionAddress(collections[0].collectionAddress);
+      }
+    }
+    getCollections();
   }, [address]);
 
   useEffect(() => {
@@ -143,7 +168,9 @@ export function LaunchForm({
     setSymbol("NFT");
     setDescription(randomText());
     setImageURL(randomImage());
-    setBannerURL(randomBanner());
+    if (mintType === "collection") {
+      setBannerURL(randomBanner());
+    }
   };
 
   const launchToken = async () => {
@@ -159,6 +186,10 @@ export function LaunchForm({
       log.error("LaunchForm: no name", { adminAddress });
       return;
     }
+    if (mintType === "nft" && !collectionAddress) {
+      log.error("LaunchForm: no collection address", { adminAddress });
+      return;
+    }
     if ((await checkAvailability()) !== null) {
       log.info("LaunchForm: not available", { adminAddress });
       window.location.href = "/not-available";
@@ -172,6 +203,7 @@ export function LaunchForm({
     onLaunch({
       symbol,
       mintType,
+      collectionAddress,
       name: name,
       description,
       image,
@@ -232,249 +264,295 @@ export function LaunchForm({
                 </button>
               </div>
             </div>
-            {/* Token name */}
-            <div className="mb-6">
-              <label
-                htmlFor="token-name"
-                className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white"
-              >
-                {mintType === "collection" ? "NFT collection name" : "NFT name"}
-                <span className="text-red">*</span>
-              </label>
-              <input
-                type="text"
-                id="token-name"
-                className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
-                placeholder={
-                  mintType === "collection"
-                    ? "Enter NFT collection name"
-                    : "Enter NFT name"
-                }
-                required
-                autoComplete="off"
-                value={name}
-                onChange={(e) => {
-                  const input = e.target as HTMLInputElement;
-                  setName(input.value);
-                }}
-              />
-            </div>
 
-            {/* Token description */}
-            <div className="mb-6">
-              <label
-                htmlFor="token-description"
-                className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white"
-              >
-                {mintType === "collection"
-                  ? "NFT collection description"
-                  : "NFT description"}
-              </label>
-              <textarea
-                id="token-description"
-                className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
-                placeholder={
-                  mintType === "collection"
-                    ? "Tell the world your story about the NFT collection"
-                    : "Tell the world your story about the NFT"
-                }
-                rows={2}
-                value={description}
-                autoComplete="off"
-                onInput={(e) => {
-                  const input = e.target as HTMLTextAreaElement;
-                  setDescription(input.value);
-                  // Adjust the number of rows based on the content
-                  const lineCount = input.value.split("\n").length;
-                  input.rows = Math.min(5, Math.max(2, lineCount));
-                }}
-              ></textarea>
-            </div>
-
-            {/* Token symbol */}
-            {mintType === "collection" && (
+            {mintType === "nft" && collections.length > 0 && (
               <div className="mb-6">
-                <label
-                  htmlFor="token-symbol"
-                  className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white"
-                >
-                  NFT collection symbol<span className="text-red">*</span>
+                <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
+                  Collection
                 </label>
-                <input
-                  type="text"
-                  id="token-symbol"
-                  className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
-                  placeholder="Enter NFT collection symbol (max 6 chars)"
-                  required
-                  autoComplete="off"
-                  maxLength={6}
-                  value={symbol}
-                  onInput={(e) => {
-                    const input = e.target as HTMLInputElement;
-                    setSymbol(input.value);
-                  }}
-                />
+                <select className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300">
+                  {collections.map((collection) => (
+                    <option
+                      key={collection.collectionAddress}
+                      value={collection.collectionAddress}
+                      onClick={() =>
+                        setCollectionAddress(collection.collectionAddress)
+                      }
+                    >
+                      {collection.collectionName}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
-            {/* Traits */}
-            <div className="mb-6">
-              <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
-                Traits
-              </label>
-              {/* <Tippy content={"Click to add"} hideOnClick={true}> */}
-              <button
-                className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
-                  addressValid
-                    ? "border-jacarta-100 dark:border-jacarta-600"
-                    : "border-2 border-red"
-                }`}
-                id="traits"
-                data-bs-toggle="modal"
-                data-bs-target="#TraitsModal"
-              >
-                <span>{traitsText}</span>
+            {mintType === "nft" && collections.length === 0 && (
+              <div className="mb-6">
+                <p className="text-jacarta-500 dark:text-jacarta-300">
+                  You don't have any collections yet. Please create a collection
+                  first.
+                </p>
+              </div>
+            )}
 
-                <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="15"
-                    height="16"
-                    className="fill-accent group-hover:fill-white rounded-md border border-accent "
+            {((mintType === "nft" && collectionAddress) ||
+              mintType === "collection") && (
+              <>
+                {/* Token name */}
+                <div className="mb-6">
+                  <label
+                    htmlFor="token-name"
+                    className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white"
                   >
-                    <path fill="none" d="M0 0h24v24H0z" />
-                    <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />{" "}
-                  </svg>
+                    {mintType === "collection"
+                      ? "NFT collection name"
+                      : "NFT name"}
+                    <span className="text-red">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="token-name"
+                    className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
+                    placeholder={
+                      mintType === "collection"
+                        ? "Enter NFT collection name"
+                        : "Enter NFT name"
+                    }
+                    required
+                    autoComplete="off"
+                    value={name}
+                    onChange={(e) => {
+                      const input = e.target as HTMLInputElement;
+                      setName(input.value);
+                    }}
+                  />
                 </div>
-              </button>
-              {/* </Tippy> */}
-              <TraitsModal onSubmit={setTraits} />
-            </div>
 
-            {/* Permissions */}
-            <div className="mb-6">
-              <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
-                Permissions
-              </label>
-              {/* <Tippy content={"Click to add"} hideOnClick={true}> */}
-              <button
-                className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
-                  addressValid
-                    ? "border-jacarta-100 dark:border-jacarta-600"
-                    : "border-2 border-red"
-                }`}
-                id="permissions"
-                data-bs-toggle="modal"
-                data-bs-target="#PermissionsModal"
-              >
-                <span>{permissionsText}</span>
-
-                <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="15"
-                    height="16"
-                    className="fill-accent group-hover:fill-white rounded-md border border-accent "
+                {/* Token description */}
+                <div className="mb-6">
+                  <label
+                    htmlFor="token-description"
+                    className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white"
                   >
-                    <path fill="none" d="M0 0h24v24H0z" />
-                    <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />{" "}
-                  </svg>
+                    {mintType === "collection"
+                      ? "NFT collection description"
+                      : "NFT description"}
+                  </label>
+                  <textarea
+                    id="token-description"
+                    className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
+                    placeholder={
+                      mintType === "collection"
+                        ? "Tell the world your story about the NFT collection"
+                        : "Tell the world your story about the NFT"
+                    }
+                    rows={2}
+                    value={description}
+                    autoComplete="off"
+                    onInput={(e) => {
+                      const input = e.target as HTMLTextAreaElement;
+                      setDescription(input.value);
+                      // Adjust the number of rows based on the content
+                      const lineCount = input.value.split("\n").length;
+                      input.rows = Math.min(5, Math.max(2, lineCount));
+                    }}
+                  ></textarea>
                 </div>
-              </button>
-              {/* </Tippy> */}
-              <PermissionsModal onSubmit={setPermissions} mintType={mintType} />
-            </div>
 
-            {/* Wallet address */}
-            <div className="mb-6">
-              <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
-                Your Wallet Address<span className="text-red">*</span>
-              </label>
-              <button
-                className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
-                  addressValid
-                    ? "border-jacarta-100 dark:border-jacarta-600"
-                    : "border-2 border-red"
-                }`}
-                id="admin-address"
-                // data-tippy-content="Copy"
-                onClick={() => {
-                  navigator.clipboard.writeText(adminAddress ?? "");
-                }}
-              >
-                <span>{shortenString(adminAddress, 14) ?? ""}</span>
+                {/* Token symbol */}
+                {mintType === "collection" && (
+                  <div className="mb-6">
+                    <label
+                      htmlFor="token-symbol"
+                      className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white"
+                    >
+                      NFT collection symbol<span className="text-red">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="token-symbol"
+                      className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
+                      placeholder="Enter NFT collection symbol (max 6 chars)"
+                      required
+                      autoComplete="off"
+                      maxLength={6}
+                      value={symbol}
+                      onInput={(e) => {
+                        const input = e.target as HTMLInputElement;
+                        setSymbol(input.value);
+                      }}
+                    />
+                  </div>
+                )}
 
-                <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    width="15"
-                    height="16"
+                {/* Traits */}
+                <div className="mb-6">
+                  <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
+                    Traits
+                  </label>
+                  {/* <Tippy content={"Click to add"} hideOnClick={true}> */}
+                  <button
+                    className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
+                      addressValid
+                        ? "border-jacarta-100 dark:border-jacarta-600"
+                        : "border-2 border-red"
+                    }`}
+                    id="traits"
+                    data-bs-toggle="modal"
+                    data-bs-target="#TraitsModal"
                   >
-                    <path fill="none" d="M0 0h24v24H0z"></path>
-                    <path d="M7 7V3a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-4v3.993c0 .556-.449 1.007-1.007 1.007H3.007A1.006 1.006 0 0 1 2 20.993l.003-12.986C2.003 7.451 2.452 7 3.01 7H7zm2 0h6.993C16.549 7 17 7.449 17 8.007V15h3V4H9v3zM4.003 9L4 20h11V9H4.003z"></path>
-                  </svg>
-                </div>
-              </button>
-            </div>
+                    <span>{traitsText}</span>
 
-            {/* <Tippy content={launchTip}> */}
-            <button
-              onClick={launchToken}
-              className={`rounded-full py-3 px-8 text-center font-semibold transition-all ${
-                buttonDisabled && false // TODO: remove this in production
-                  ? "bg-jacarta-300 text-white cursor-not-allowed"
-                  : "bg-accent text-white shadow-accent-volume hover:bg-accent-dark"
-              }`}
-            >
-              {addressValid
-                ? buttonDisabled
-                  ? "Generate random data" // TODO: remove this in production
-                  : mintType === "collection"
-                  ? "Launch NFT collection"
-                  : "MintNFT"
-                : "Connect Wallet"}
-            </button>
+                    <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="15"
+                        height="16"
+                        className="fill-accent group-hover:fill-white rounded-md border border-accent "
+                      >
+                        <path fill="none" d="M0 0h24v24H0z" />
+                        <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />{" "}
+                      </svg>
+                    </div>
+                  </button>
+                  {/* </Tippy> */}
+                  <TraitsModal onSubmit={setTraits} />
+                </div>
+
+                {/* Permissions */}
+                <div className="mb-6">
+                  <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
+                    Permissions
+                  </label>
+                  {/* <Tippy content={"Click to add"} hideOnClick={true}> */}
+                  <button
+                    className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
+                      addressValid
+                        ? "border-jacarta-100 dark:border-jacarta-600"
+                        : "border-2 border-red"
+                    }`}
+                    id="permissions"
+                    data-bs-toggle="modal"
+                    data-bs-target="#PermissionsModal"
+                  >
+                    <span>{permissionsText}</span>
+
+                    <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="15"
+                        height="16"
+                        className="fill-accent group-hover:fill-white rounded-md border border-accent "
+                      >
+                        <path fill="none" d="M0 0h24v24H0z" />
+                        <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />{" "}
+                      </svg>
+                    </div>
+                  </button>
+                  {/* </Tippy> */}
+                  <PermissionsModal
+                    onSubmit={setPermissions}
+                    mintType={mintType}
+                  />
+                </div>
+
+                {/* Wallet address */}
+                <div className="mb-6">
+                  <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
+                    Your Wallet Address<span className="text-red">*</span>
+                  </label>
+                  <button
+                    className={`js-copy-clipboard flex w-full select-none items-center rounded-lg border bg-white py-3 px-4 hover:bg-jacarta-50 dark:bg-jacarta-700 dark:text-jacarta-300 ${
+                      addressValid
+                        ? "border-jacarta-100 dark:border-jacarta-600"
+                        : "border-2 border-red"
+                    }`}
+                    id="admin-address"
+                    // data-tippy-content="Copy"
+                    onClick={() => {
+                      navigator.clipboard.writeText(adminAddress ?? "");
+                    }}
+                  >
+                    <span>{shortenString(adminAddress, 14) ?? ""}</span>
+
+                    <div className="ml-auto mb-px h-4 w-4 fill-jacarta-500 dark:fill-jacarta-300">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        width="15"
+                        height="16"
+                      >
+                        <path fill="none" d="M0 0h24v24H0z"></path>
+                        <path d="M7 7V3a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-4v3.993c0 .556-.449 1.007-1.007 1.007H3.007A1.006 1.006 0 0 1 2 20.993l.003-12.986C2.003 7.451 2.452 7 3.01 7H7zm2 0h6.993C16.549 7 17 7.449 17 8.007V15h3V4H9v3zM4.003 9L4 20h11V9H4.003z"></path>
+                      </svg>
+                    </div>
+                  </button>
+                </div>
+
+                {/* <Tippy content={launchTip}> */}
+                <button
+                  onClick={launchToken}
+                  className={`rounded-full py-3 px-8 text-center font-semibold transition-all ${
+                    buttonDisabled && false // TODO: remove this in production
+                      ? "bg-jacarta-300 text-white cursor-not-allowed"
+                      : "bg-accent text-white shadow-accent-volume hover:bg-accent-dark"
+                  }`}
+                >
+                  {addressValid
+                    ? buttonDisabled
+                      ? "Generate random data" // TODO: remove this in production
+                      : mintType === "collection"
+                      ? "Launch NFT collection"
+                      : "MintNFT"
+                    : "Connect Wallet"}
+                </button>
+              </>
+            )}
             {/* </Tippy> */}
           </div>
-          <div className="mb-12 md:w-1/2 md:pr-8">
-            <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
-              <FileUpload
-                setImage={setImage}
-                setImageURL={setImageURL}
-                url={imageURL}
-              />
-            </div>
-            {imageError && (
-              <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
-                <p className="text-red">{imageError}</p>
+          {((mintType === "nft" && collectionAddress) ||
+            mintType === "collection") && (
+            <>
+              <div className="mb-12 md:w-1/2 md:pr-8">
+                <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+                  <FileUpload
+                    setImage={setImage}
+                    setImageURL={setImageURL}
+                    url={imageURL}
+                  />
+                </div>
+                {imageError && (
+                  <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+                    <p className="text-red">{imageError}</p>
+                  </div>
+                )}
+                {symbol && name && address && !imageError && (
+                  <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+                    <button
+                      onClick={generateImageWithAI}
+                      disabled={imageGenerating || imageError !== undefined}
+                      className="rounded-full bg-accent py-1 px-6 text-center text-white shadow-accent-volume transition-all hover:bg-accent-dark text-sm"
+                    >
+                      {imageGenerating ? "Generating..." : "Generate with AI"}
+                    </button>
+                  </div>
+                )}
+                {mintType === "collection" && (
+                  <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+                    <FileUpload
+                      setImage={setBanner}
+                      setImageURL={setBannerURL}
+                      url={bannerURL}
+                      label="NFT collection banner"
+                      description="Upload a banner image (max 5MB). Recommended size is 1920x300 pixels."
+                    />
+                  </div>
+                )}
               </div>
-            )}
-            {symbol && name && address && !imageError && (
-              <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
-                <button
-                  onClick={generateImageWithAI}
-                  disabled={imageGenerating || imageError !== undefined}
-                  className="rounded-full bg-accent py-1 px-6 text-center text-white shadow-accent-volume transition-all hover:bg-accent-dark text-sm"
-                >
-                  {imageGenerating ? "Generating..." : "Generate with AI"}
-                </button>
-              </div>
-            )}
-            {mintType === "collection" && (
-              <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
-                <FileUpload
-                  setImage={setBanner}
-                  setImageURL={setBannerURL}
-                  url={bannerURL}
-                  label="NFT collection banner"
-                  description="Upload a banner image (max 5MB). Recommended size is 1920x300 pixels."
-                />
-              </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
     </section>
