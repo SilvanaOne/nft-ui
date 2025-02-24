@@ -11,12 +11,9 @@ import { getChain, getWallet } from "@/lib/chain";
 import { log } from "@/lib/log";
 import { buildCollectionLaunchTransaction, proveTransaction } from "@/lib/api";
 import {
-  randomName,
-  randomImage,
-  randomBanner,
-  randomText,
-} from "@/lib/random";
-import { LaunchNftCollectionStandardAdminParams } from "@silvana-one/api";
+  LaunchNftCollectionStandardAdminParams,
+  NftTransaction,
+} from "@silvana-one/api";
 import { LaunchCollectionData } from "@/lib/token";
 const DEBUG = debug();
 const chain = getChain();
@@ -30,11 +27,24 @@ export async function mintNFT(params: {
   updateTimelineItem: UpdateTimelineItemFunction;
   groupId: GroupId;
   mintType: "collection" | "nft";
-}): Promise<{
-  success: boolean;
-  error?: string;
-  jobId?: string;
-}> {
+}): Promise<
+  | {
+      success: false;
+      error: string;
+    }
+  | {
+      success: true;
+      jobId: string;
+      collectionAddress: string;
+      nftAddress: string | undefined;
+      privateMetadata: string;
+      metadataFileName: string;
+      privateKeys: string;
+      keysFileName: string;
+      storage: string;
+      metadataRoot: string;
+    }
+> {
   const { data, sender, image, banner, updateTimelineItem, groupId, mintType } =
     params;
   const { symbol, name, description, adminAddress, traits } = data;
@@ -46,7 +56,7 @@ export async function mintNFT(params: {
       throw new Error("No Auro Wallet found");
     }
 
-    const collectionName = randomName();
+    const collectionName = data.name;
     console.log(`Launching new NFT collection ${collectionName}...`, {
       sender,
       collectionName,
@@ -55,13 +65,23 @@ export async function mintNFT(params: {
     const collectionLaunchParams: LaunchNftCollectionStandardAdminParams = {
       txType: "nft:launch",
       collectionName,
+      collectionData: {
+        ...(data.collectionPermissions ?? {}),
+        transferFee: data.collectionPermissions?.transferFee
+          ? Number(data.collectionPermissions.transferFee)
+          : undefined,
+      },
       sender,
       adminContract: "standard",
       symbol: "NFT",
       masterNFT: {
         name: collectionName,
         data: {
+          ...(data.nftPermissions ?? {}),
           owner: sender,
+          id: data.nftPermissions?.id
+            ? data.nftPermissions.id.toString()
+            : undefined,
         },
         metadata: {
           name: collectionName,
@@ -205,18 +225,28 @@ export async function mintNFT(params: {
       },
     });
 
+    const reply = launchReply;
+
     return {
       success: true,
       jobId,
+      collectionAddress: reply.collectionAddress,
+      privateMetadata: reply.privateMetadata,
+      metadataFileName: reply.metadataFileName,
+      privateKeys: reply.privateKeys,
+      keysFileName: reply.keysFileName,
+      storage: reply.storage,
+      metadataRoot: reply.metadataRoot,
+      nftAddress: undefined,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in deployToken", error);
     log.error("deployToken: Error while deploying token", { error });
     updateTimelineItem({
       groupId,
       update: {
         lineId: "error",
-        content: String(error),
+        content: String(error?.message ?? "Unknown error"),
         status: "error",
       },
     });

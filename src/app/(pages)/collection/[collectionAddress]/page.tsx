@@ -9,15 +9,15 @@ import CollectionDetails from "@/components/nft/CollectionDetails";
 export default async function CollectionDetailsPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ collectionAddress: string }>;
 }) {
-  const { id } = await params;
+  const { collectionAddress } = await params;
 
   return (
     <>
       {/* <TokenHeader showSearch={false} /> */}
       <main className="mt-24">
-        <CollectionDetails tokenAddress={id} />
+        <CollectionDetails collectionAddress={collectionAddress} />
       </main>
       <TokenFooter />
     </>

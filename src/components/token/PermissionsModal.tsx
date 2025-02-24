@@ -200,6 +200,7 @@ export function PermissionsModalForm({
       className="modal fade"
       id="PermissionsModal"
       tabIndex={-1}
+      key="permissions-modal"
       aria-labelledby="addPermissionsLabel"
       aria-hidden="true"
     >
@@ -237,7 +238,10 @@ export function PermissionsModalForm({
                 item.key !== "requireTransferApproval"
             )
             .map((item, index) => (
-              <div className="relative py-2 px-6 dark:border-jacarta-600">
+              <div
+                className="relative py-2 px-6 dark:border-jacarta-600"
+                key={item.key}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex">
                     <div>

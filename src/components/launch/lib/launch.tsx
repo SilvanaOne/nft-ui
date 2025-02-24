@@ -26,10 +26,10 @@ import {
   GroupId,
   UpdateTimelineItemFunction,
 } from "./messages";
-import { waitForProveJob } from "./mina-tx";
+import { waitForContractVerification, waitForProveJob } from "./mina-tx";
 import { log } from "@/lib/log";
 import { LaunchNftCollectionStandardAdminParams } from "@silvana-one/api";
-import { pinImage, createIpfsURL } from "@/lib/ipfs";
+import { pinImage, publicIpfsURL } from "@/lib/ipfs";
 const chain = getChain();
 const chainId = getChainId();
 const DEBUG = debug();
@@ -93,6 +93,7 @@ export async function launchNFT(params: {
   setTotalSupply: (totalSupply: number) => void;
   setTokenAddress: (tokenAddress: string) => void;
   setLikes: (likes: number) => void;
+  setIsLaunched: (isLaunched: boolean) => void;
 }) {
   const {
     data,
@@ -103,8 +104,9 @@ export async function launchNFT(params: {
     setLikes,
     isError,
     getMintStatistics,
+    setIsLaunched,
   } = params;
-  const { image, imageURL, banner, bannerURL } = data;
+  const { image, imageURL, banner, bannerURL, mintType } = data;
   let likes = 0;
   log.error("launchCollection: starting", { data });
   if (DEBUG) console.log("launchCollection: starting", { data });
@@ -180,14 +182,21 @@ export async function launchNFT(params: {
   // }
 
   try {
+    if (DEBUG) console.log("launchToken: minting NFT collection", { data });
     addLog({
-      groupId: "verify",
+      groupId: "deploy",
       status: "waiting",
-      title: `Verifying NFT collection data for ${data.symbol}`,
-      successTitle: `NFT collection data for ${data.symbol} verified`,
-      errorTitle: `Failed to verify NFT collection data for ${data.symbol}`,
-      lines: [messages.verifyData],
-      requiredForSuccess: ["verifyData", "privateKeysSaved", "image"],
+      title:
+        mintType === "collection" ? `Launching NFT collection` : `Minting NFT`,
+      successTitle:
+        mintType === "collection" ? `NFT collection launched` : `NFT minted`,
+      errorTitle:
+        mintType === "collection"
+          ? `Failed to launch NFT collection`
+          : `Failed to mint NFT`,
+      lines: [messages.txPrepared],
+      requiredForSuccess: ["minted"],
+      keepOnTop: true,
     });
 
     if (DEBUG) console.log("launchToken: launching token:", data);
@@ -198,7 +207,7 @@ export async function launchNFT(params: {
       walletInfo = await getWalletInfo();
       if (!walletInfo.address || walletInfo.network !== chainId) {
         updateTimelineItem({
-          groupId: "verify",
+          groupId: "deploy",
           update: {
             lineId: "noAuroWallet",
             content: `Please connect to ${chain} network first`,
@@ -206,12 +215,14 @@ export async function launchNFT(params: {
           },
         });
         log.error("launchToken: no Auro wallet", { walletInfo });
+        await stopProcessUpdateRequests();
         return;
       }
     }
     const systemInfo = getSystemInfo();
     if (DEBUG) console.log("launchToken: System Info:", systemInfo);
     if (isError()) return;
+    setLikes((likes += 10));
     const mina = (window as any).mina;
     if (
       mina === undefined ||
@@ -219,7 +230,7 @@ export async function launchNFT(params: {
       walletInfo.address === undefined
     ) {
       updateTimelineItem({
-        groupId: "verify",
+        groupId: "deploy",
         update: {
           lineId: "noAuroWallet",
           content: messages.noAuroWallet.content,
@@ -227,7 +238,7 @@ export async function launchNFT(params: {
         },
       });
       updateTimelineItem({
-        groupId: "verify",
+        groupId: "deploy",
         update: {
           lineId: "verifyData",
           content: "Data verification failed",
@@ -235,9 +246,11 @@ export async function launchNFT(params: {
         },
       });
       log.error("launchToken: no Auro wallet", { walletInfo });
+      await stopProcessUpdateRequests();
       return;
     }
     if (isError()) return;
+    setLikes((likes += 10));
 
     // const mintItems: MintAddressVerified[] = [];
     // if (DEBUG) console.log("Mint addresses:", mintAddresses);
@@ -252,7 +265,7 @@ export async function launchNFT(params: {
     //     } else {
     //       if (DEBUG) console.log("Mint item skipped:", item);
     //       updateTimelineItem({
-    //         groupId: "verify",
+    //         groupId: "deploy",
     //         update: {
     //           lineId: "mintDataError",
     //           content: `Cannot mint ${item.amount} ${symbol} tokens to ${item.address} because of wrong amount or address`,
@@ -260,7 +273,7 @@ export async function launchNFT(params: {
     //         },
     //       });
     //       updateTimelineItem({
-    //         groupId: "verify",
+    //         groupId: "deploy",
     //         update: {
     //           lineId: "verifyData",
     //           content: "Data verification failed",
@@ -275,14 +288,14 @@ export async function launchNFT(params: {
     // if (DEBUG) console.log("Mint items filtered:", mintItems);
     // if (isError()) return;
 
-    updateTimelineItem({
-      groupId: "verify",
-      update: {
-        lineId: "verifyData",
-        content: "NFT data is verified",
-        status: "success",
-      },
-    });
+    // updateTimelineItem({
+    //   groupId: "deploy",
+    //   update: {
+    //     lineId: "verifyData",
+    //     content: "NFT data is verified",
+    //     status: "success",
+    //   },
+    // });
 
     let imageHash: string | undefined = undefined;
     let imageExtension: string | undefined = undefined;
@@ -291,7 +304,7 @@ export async function launchNFT(params: {
 
     if (banner) {
       updateTimelineItem({
-        groupId: "verify",
+        groupId: "deploy",
         update: messages.banner,
       });
 
@@ -302,7 +315,7 @@ export async function launchNFT(params: {
         const bannerTxMessage = (
           <>
             <a
-              href={await createIpfsURL({ hash: bannerHash })}
+              href={await publicIpfsURL({ hash: bannerHash })}
               className="text-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -313,7 +326,7 @@ export async function launchNFT(params: {
           </>
         );
         updateTimelineItem({
-          groupId: "verify",
+          groupId: "deploy",
           update: {
             lineId: "banner",
             content: bannerTxMessage,
@@ -322,7 +335,7 @@ export async function launchNFT(params: {
         });
       } else {
         updateTimelineItem({
-          groupId: "verify",
+          groupId: "deploy",
           update: {
             lineId: "banner",
             content: "Failed to pin NFT banner",
@@ -330,6 +343,7 @@ export async function launchNFT(params: {
           },
         });
         log.error("launch: failed to pin banner", { bannerHash });
+        await stopProcessUpdateRequests();
         return;
       }
     } else if (bannerURL) {
@@ -347,7 +361,7 @@ export async function launchNFT(params: {
         </>
       );
       updateTimelineItem({
-        groupId: "verify",
+        groupId: "deploy",
         update: {
           lineId: "banner",
           content: bannerTxMessage,
@@ -357,7 +371,7 @@ export async function launchNFT(params: {
     }
     if (image) {
       updateTimelineItem({
-        groupId: "verify",
+        groupId: "deploy",
         update: messages.image,
       });
 
@@ -368,7 +382,7 @@ export async function launchNFT(params: {
         const imageTxMessage = (
           <>
             <a
-              href={await createIpfsURL({ hash: imageHash })}
+              href={await publicIpfsURL({ hash: imageHash })}
               className="text-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -379,7 +393,7 @@ export async function launchNFT(params: {
           </>
         );
         updateTimelineItem({
-          groupId: "verify",
+          groupId: "deploy",
           update: {
             lineId: "image",
             content: imageTxMessage,
@@ -388,7 +402,7 @@ export async function launchNFT(params: {
         });
       } else {
         updateTimelineItem({
-          groupId: "verify",
+          groupId: "deploy",
           update: {
             lineId: "image",
             content: "Failed to pin NFT image",
@@ -396,6 +410,7 @@ export async function launchNFT(params: {
           },
         });
         log.error("launch: failed to pin image", { imageHash });
+        await stopProcessUpdateRequests();
         return;
       }
     } else if (imageURL) {
@@ -413,7 +428,7 @@ export async function launchNFT(params: {
         </>
       );
       updateTimelineItem({
-        groupId: "verify",
+        groupId: "deploy",
         update: {
           lineId: "image",
           content: imageTxMessage,
@@ -422,11 +437,11 @@ export async function launchNFT(params: {
       });
     }
     const bannerImage = bannerHash
-      ? await createIpfsURL({ hash: bannerHash })
+      ? await publicIpfsURL({ hash: bannerHash })
       : bannerURL;
     if (!bannerImage) {
       updateTimelineItem({
-        groupId: "verify",
+        groupId: "deploy",
         update: {
           lineId: "banner",
           content: "No banner provided",
@@ -434,14 +449,16 @@ export async function launchNFT(params: {
         },
       });
       log.error("launch: no banner provided");
+      await stopProcessUpdateRequests();
       return;
     }
+    setLikes((likes += 10));
     const nftImage = imageHash
-      ? await createIpfsURL({ hash: imageHash })
+      ? await publicIpfsURL({ hash: imageHash })
       : imageURL;
     if (!nftImage) {
       updateTimelineItem({
-        groupId: "verify",
+        groupId: "deploy",
         update: {
           lineId: "image",
           content: "No image provided",
@@ -449,150 +466,11 @@ export async function launchNFT(params: {
         },
       });
       log.error("launch: no image provided");
+      await stopProcessUpdateRequests();
       return;
     }
     if (isError()) return;
-
-    // const imageURL = imageHash
-    //   ? (await arweaveHashToUrl(imageHash)) +
-    //     (imageExtension ? `/${symbol}.${imageExtension}` : "")
-    //   : undefined;
-    // const info: TokenInfo = {
-    //   symbol,
-    //   name,
-    //   description,
-    //   image: imageURL,
-    //   twitter,
-    //   discord,
-    //   telegram,
-    //   instagram,
-    //   facebook,
-    //   website,
-    //   tokenContractCode:
-    //     "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleToken.ts",
-    //   adminContractsCode: [
-    //     "https://github.com/MinaFoundation/mina-fungible-token/blob/main/FungibleTokenAdmin.ts",
-    //   ],
-    //   data: undefined,
-    //   isMDA: undefined,
-    //   launchpad: getLaunchpadUrl(),
-    // };
-    // if (DEBUG) console.log("Token info:", info);
-
-    // addLog({
-    //   groupId: "metadata",
-    //   status: "waiting",
-    //   title: `Pinning token metadata for ${data.symbol}`,
-    //   successTitle: `Token metadata for ${data.symbol} pinned`,
-    //   errorTitle: `Failed to pin token metadata for ${data.symbol}`,
-    //   lines: [messages.pinningMetadata],
-    //   requiredForSuccess: ["pinningMetadata", "arweaveTx", "arweaveIncluded"],
-    // });
-
-    // const metadataHash = await pinStringToArweave(
-    //   JSON.stringify(info, null, 2)
-    // );
-
-    // if (!metadataHash) {
-    //   updateTimelineItem({
-    //     groupId: "metadata",
-    //     update: {
-    //       lineId: "pinningMetadata",
-    //       content: "Failed to pin token metadata to Arweave permanent storage",
-    //       status: "error",
-    //     },
-    //   });
-    //   log.error("launchToken: failed to pin metadata", { metadataHash });
-    //   return;
-    // } else {
-    //   const metadataTxMessage = (
-    //     <>
-    //       <a
-    //         href={`https://arscan.io/tx/${metadataHash}`}
-    //         className="text-accent hover:underline"
-    //         target="_blank"
-    //         rel="noopener noreferrer"
-    //       >
-    //         Transaction
-    //       </a>{" "}
-    //       is sent to Arweave
-    //     </>
-    //   );
-    //   updateTimelineItem({
-    //     groupId: "metadata",
-    //     update: {
-    //       lineId: "arweaveTx",
-    //       content: metadataTxMessage,
-    //       status: "success",
-    //     },
-    //   });
-    //   updateTimelineItem({
-    //     groupId: "metadata",
-    //     update: {
-    //       lineId: "pinningMetadata",
-    //       content: "Token metadata is uploaded to Arweave",
-    //       status: "success",
-    //     },
-    //   });
-    //   updateTimelineItem({
-    //     groupId: "metadata",
-    //     update: messages.arweaveIncluded,
-    //   });
-    // }
-    // if (isError()) return;
-    // setLikes((likes += 10));
-
-    // let waitForArweaveImageTxPromise = undefined;
-    // if (imageHash) {
-    //   waitForArweaveImageTxPromise = waitForArweaveTx({
-    //     hash: imageHash,
-    //     groupId: "image",
-    //     lineId: "arweaveIncluded",
-    //     updateTimelineItem,
-    //     type: "image",
-    //   });
-    // }
-
-    // const waitForArweaveMetadataTxPromise = waitForArweaveTx({
-    //   hash: metadataHash,
-    //   groupId: "metadata",
-    //   lineId: "arweaveIncluded",
-    //   updateTimelineItem,
-    //   type: "metadata",
-    // });
-
-    // const uri = (await arweaveHashToUrl(metadataHash)) + `/${symbol}.json`;
-    // const lib = await libPromise;
-
-    // const {
-    //   tokenPrivateKey,
-    //   adminContractPrivateKey,
-    //   tokenPublicKey,
-    //   adminContractPublicKey,
-    //   tokenId,
-    // } = await deployTokenParams(lib);
-    // if (DEBUG) console.log("Deploy Params received");
-    // setTokenAddress(tokenPublicKey);
-    // updateTimelineItem({
-    //   groupId: "verify",
-    //   update: {
-    //     lineId: "privateKeysGenerated",
-    //     content: `Token private keys are generated`,
-    //     status: "success",
-    //   },
-    // });
-
-    if (DEBUG) console.log("launchToken: minting NFT collection", { data });
-    addLog({
-      groupId: "deploy",
-      status: "waiting",
-      title: `Launching NFT collection ${data.symbol}`,
-      successTitle: `NFT collection ${data.symbol} launched`,
-      errorTitle: `Failed to launch NFT collection ${data.symbol}`,
-      lines: [messages.txPrepared],
-      requiredForSuccess: ["minted"],
-      keepOnTop: true,
-    });
+    setLikes((likes += 10));
 
     const mintResult = await mintNFT({
       data,
@@ -609,96 +487,7 @@ export async function launchNFT(params: {
         mintResult,
       });
 
-    // const tokenAddress = mintResult.jobId
-
-    // const tokenAddressMsg = (
-    //   <>
-    //     Token address:{" "}
-    //     <a
-    //       href={`${explorerAccountUrl()}${tokenPublicKey}`}
-    //       className="text-accent hover:underline"
-    //       target="_blank"
-    //       rel="noopener noreferrer"
-    //     >
-    //       {tokenPublicKey}
-    //     </a>
-    //   </>
-    // );
-    // updateTimelineItem({
-    //   groupId: "verify",
-    //   update: {
-    //     lineId: "tokenAddress",
-    //     content: tokenAddressMsg,
-    //     status: "success",
-    //   },
-    // });
-    // if (isError()) return;
-    // // Save the result to a JSON file
-    // const deployParams = {
-    //   symbol,
-    //   name,
-    //   description,
-    //   image: imageURL,
-    //   website,
-    //   telegram,
-    //   twitter,
-    //   discord,
-    //   tokenPrivateKey,
-    //   adminContractPrivateKey,
-    //   tokenPublicKey,
-    //   adminContractPublicKey,
-    //   adminPublicKey,
-    //   metadata: uri,
-    // };
-    // updateTimelineItem({
-    //   groupId: "verify",
-    //   update: messages.privateKeysSaved,
-    // });
-    // // TODO: save with password encryption
-    // const deployParamsJson = JSON.stringify(deployParams, null, 2);
-    // const blob = new Blob([deployParamsJson], { type: "application/json" });
-    // const url = URL.createObjectURL(blob);
-    // const a = document.createElement("a");
-    // a.href = url;
-    // const fileName = `${symbol}-${tokenPublicKey}.json`;
-    // a.download = fileName;
-    // a.click();
-    // const saveDeployParamsSuccessMsg = (
-    //   <>
-    //     Token private keys have been saved to a{" "}
-    //     <a
-    //       href={url}
-    //       download={fileName}
-    //       className="text-accent hover:underline"
-    //       target="_blank"
-    //       rel="noopener noreferrer"
-    //     >
-    //       JSON file
-    //     </a>
-    //   </>
-    // );
-    // updateTimelineItem({
-    //   groupId: "verify",
-    //   update: {
-    //     lineId: "privateKeysSaved",
-    //     content: saveDeployParamsSuccessMsg,
-    //     status: "success",
-    //   },
-    // });
-    // setLikes((likes += 10));
-    // addLog({
-    //   groupId: "deploy",
-    //   status: "waiting",
-    //   title: `Launching token ${data.symbol}`,
-    //   successTitle: `Token ${data.symbol} launched`,
-    //   errorTitle: `Failed to launch token ${data.symbol}`,
-    //   lines: [messages.txPrepared],
-    //   requiredForSuccess: ["contractStateVerified"],
-    //   keepOnTop: true,
-    // });
-
-    if (DEBUG) console.log("Mint result:", mintResult);
-    if (mintResult.success === false || mintResult.jobId === undefined) {
+    if (mintResult.success === false) {
       updateTimelineItem({
         groupId: "deploy",
         update: {
@@ -707,10 +496,22 @@ export async function launchNFT(params: {
           status: "error",
         },
       });
-      log.error("launchToken: failed to deploy token", { mintResult });
+      log.error("launchToken: failed to deploy token 1", { mintResult });
       await stopProcessUpdateRequests();
       return;
     }
+    const {
+      jobId,
+      collectionAddress,
+      privateMetadata,
+      metadataFileName,
+      privateKeys,
+      keysFileName,
+      storage,
+      metadataRoot,
+      nftAddress,
+    } = mintResult;
+
     if (isError()) {
       addLog({
         groupId: "error",
@@ -727,11 +528,108 @@ export async function launchNFT(params: {
       await stopProcessUpdateRequests();
       return;
     }
+    setLikes((likes += 20));
+
+    const tokenAddress =
+      mintType === "collection" ? collectionAddress : nftAddress;
+    const tokenAddressMsg = (
+      <>
+        {mintType === "collection" ? "NFT collection" : "NFT"} address:{" "}
+        <a
+          href={`${explorerAccountUrl()}${tokenAddress}`}
+          className="text-accent hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {tokenAddress}
+        </a>
+      </>
+    );
+    updateTimelineItem({
+      groupId: "deploy",
+      update: {
+        lineId: "tokenAddress",
+        content: tokenAddressMsg,
+        status: "success",
+      },
+    });
+
+    if (!collectionAddress) throw new Error("NFT collection is not deployed");
+    console.log("NFT collection address:", collectionAddress);
+    console.log("Storage address:", storage);
+    console.log("Metadata root:", metadataRoot);
+
+    updateTimelineItem({
+      groupId: "deploy",
+      update: messages.privateKeysSaved,
+    });
+    // TODO: save with password encryption
+    const blob = new Blob([privateKeys], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = keysFileName;
+    a.click();
+    const saveDeployParamsSuccessMsg = (
+      <>
+        Private keys have been saved to a{" "}
+        <a
+          href={url}
+          download={keysFileName}
+          className="text-accent hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          JSON file
+        </a>
+      </>
+    );
+    updateTimelineItem({
+      groupId: "deploy",
+      update: {
+        lineId: "privateKeysSaved",
+        content: saveDeployParamsSuccessMsg,
+        status: "success",
+      },
+    });
+
+    const blobMetadata = new Blob([privateMetadata], {
+      type: "application/json",
+    });
+    const urlMetadata = URL.createObjectURL(blobMetadata);
+    const aMetadata = document.createElement("a");
+    aMetadata.href = urlMetadata;
+    aMetadata.download = metadataFileName;
+    aMetadata.click();
+    const saveMetadataSuccessMsg = (
+      <>
+        Metadata has been saved to a{" "}
+        <a
+          href={urlMetadata}
+          download={metadataFileName}
+          className="text-accent hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          JSON file
+        </a>
+      </>
+    );
+    updateTimelineItem({
+      groupId: "deploy",
+      update: {
+        lineId: "metadataSaved",
+        content: saveMetadataSuccessMsg,
+        status: "success",
+      },
+    });
+
+    if (isError()) return;
+
     setLikes((likes += 10));
-    const mintJobId = mintResult.jobId;
 
     const txIncluded = await waitForProveJob({
-      jobId: mintJobId,
+      jobId,
       groupId: "deploy",
       updateTimelineItem,
       type: "launch",
@@ -751,37 +649,35 @@ export async function launchNFT(params: {
         ],
       });
       log.error("launchToken: transaction not included", { txIncluded });
+      await stopProcessUpdateRequests();
       return;
     }
-    setLikes((likes += 10));
-    // const contractVerified = await waitForContractVerification({
-    //   tokenAddress: tokenPublicKey,
-    //   adminContractAddress: adminContractPublicKey,
-    //   adminAddress: adminPublicKey,
-    //   tokenId,
-    //   groupId: "deploy",
-    //   updateTimelineItem,
-    //   info,
-    // });
-    // if (!contractVerified) {
-    //   addLog({
-    //     groupId: "error",
-    //     status: "error",
-    //     title: "Error launching token",
-    //     lines: [
-    //       {
-    //         lineId: "error",
-    //         content: "Contract verification failed",
-    //         status: "error",
-    //       },
-    //     ],
-    //   });
-    //   log.error("launchToken: contract verification failed", {
-    //     contractVerified,
-    //   });
-    //   await stopProcessUpdateRequests();
-    //   return;
-    // }
+    setLikes((likes += 20));
+    const contractVerified = await waitForContractVerification({
+      groupId: "deploy",
+      updateTimelineItem,
+      collectionAddress,
+      nftAddress,
+    });
+    if (!contractVerified) {
+      addLog({
+        groupId: "error",
+        status: "error",
+        title: "Error launching NFT",
+        lines: [
+          {
+            lineId: "error",
+            content: "Contract verification failed",
+            status: "error",
+          },
+        ],
+      });
+      log.error("launchToken: contract verification failed", {
+        contractVerified,
+      });
+      await stopProcessUpdateRequests();
+      return;
+    }
 
     if (isError()) {
       addLog({
@@ -800,6 +696,7 @@ export async function launchNFT(params: {
       await stopProcessUpdateRequests();
       return;
     }
+    setLikes((likes += 20));
 
     //     if (DEBUG) {
     //       console.log("Minting tokens", mintItems);
@@ -1001,7 +898,7 @@ export async function launchNFT(params: {
 
     const duration = 10 * 1000; // 10 seconds
     const end = Date.now() + duration;
-
+    setIsLaunched(true);
     const interval = setInterval(() => {
       if (Date.now() > end) {
         clearInterval(interval);

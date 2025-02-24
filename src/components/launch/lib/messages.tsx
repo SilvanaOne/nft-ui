@@ -35,9 +35,7 @@ export type LineId =
   | "deployTransactionProveJobFailed"
   | "deployTransactionError"
   | "contractVerification"
-  | "mintingTokens"
-  | "arweaveTx"
-  | "arweaveIncluded";
+  | "mintingTokens";
 
 export type UpdateTimelineItemFunction = (params: {
   groupId: string;
@@ -75,12 +73,12 @@ export const messages: { [key in LineId]: TimeLineItem } = {
   },
   tokenAddress: {
     lineId: "tokenAddress",
-    content: "Token address is generated",
+    content: "Contract address is generated",
     status: "success",
   },
   adminRequired: {
     lineId: "adminRequired",
-    content: "Admin address is required to launch a token",
+    content: "Admin address is required",
     status: "error",
   },
   adminAddressDoNotMatch: {
@@ -105,12 +103,12 @@ export const messages: { [key in LineId]: TimeLineItem } = {
   },
   privateKeysGenerated: {
     lineId: "privateKeysGenerated",
-    content: "Generating token private keys...",
+    content: "Generating private keys...",
     status: "waiting",
   },
   privateKeysSaved: {
     lineId: "privateKeysSaved",
-    content: "Saving token private keys...",
+    content: "Saving private keys...",
     status: "waiting",
   },
   txPrepared: {
@@ -145,17 +143,17 @@ export const messages: { [key in LineId]: TimeLineItem } = {
   },
   mintBalance: {
     lineId: "mintBalance",
-    content: "Checking token balance...",
+    content: "Checking balance...",
     status: "waiting",
   },
   contractStateVerified: {
     lineId: "contractStateVerified",
-    content: "Verifying the token contract state...",
+    content: "Verifying the contract state...",
     status: "waiting",
   },
   error: {
     lineId: "error",
-    content: "Error launching token",
+    content: "Error launching NFT",
     status: "error",
   },
   accountNotFound: {
@@ -187,22 +185,12 @@ export const messages: { [key in LineId]: TimeLineItem } = {
   },
   contractVerification: {
     lineId: "contractVerification",
-    content: "Verifying token contract state...",
+    content: "Verifying contract state...",
     status: "waiting",
   },
   mintingTokens: {
     lineId: "mintingTokens",
-    content: "Minting tokens...",
-    status: "waiting",
-  },
-  arweaveTx: {
-    lineId: "arweaveTx",
-    content: "Sending transaction to Arweave...",
-    status: "waiting",
-  },
-  arweaveIncluded: {
-    lineId: "arweaveIncluded",
-    content: "Waiting for arweave transaction to be included in a block...",
+    content: "Minting...",
     status: "waiting",
   },
 };

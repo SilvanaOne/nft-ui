@@ -1,8 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/nft/Sidebar";
-import { algoliaGetCollectionList, algoliaGetTokenList } from "@/lib/search";
-import { DeployedTokenInfo, TokenState } from "@/lib/token";
+import { algoliaGetCollectionList, algoliaGetNFTs } from "@/lib/search";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState, useContext } from "react";
@@ -11,7 +10,6 @@ import { AddressContext } from "@/context/address";
 
 // import tippy from "tippy.js";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { getTokenState } from "@/lib/state";
 import Highlight from "./Highlight";
 import Pagination from "../common/Pagination";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
@@ -20,7 +18,7 @@ import { log } from "@/lib/log";
 import { useTokenDetails } from "@/context/details";
 import { Order } from "@/components/orderbook/OrderBook";
 import { getSiteType } from "@/lib/chain";
-
+import { CollectionInfo, NftInfo } from "@silvana-one/api";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 const siteType = getSiteType();
 /*
@@ -99,16 +97,26 @@ export default function TokenList({
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const { state, dispatch } = useTokenDetails();
-  const [itemsToDisplay, setItemsToDisplay] = useState<DeployedTokenInfo[]>([]);
-  const [collections, setCollections] = useState<DeployedTokenInfo[]>([]);
+  const [itemsToDisplay, setItemsToDisplay] = useState<NftInfo[]>([]);
+  const [collections, setCollections] = useState<CollectionInfo[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [numberOfItems, setNumberOfItems] = useState<number>(
     initialNumberOfItems ?? numberOfItemsOptions[0]
   );
   const [isAvailable, setIsAvailable] = useState<boolean>(!unavailableCountry);
+  const [selectedCollection, setSelectedCollection] = useState<
+    string | undefined
+  >(undefined);
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
+
+  console.log("itemsToDisplay", itemsToDisplay);
+  console.log("state", state);
+
+  function setListSelectedCollection(collection: string | undefined) {
+    setSelectedCollection(collection);
+  }
 
   useEffect(() => {
     // tippy("[data-tippy-content]");
@@ -124,33 +132,32 @@ export default function TokenList({
       : numberOfItemsOptions;
 
   useEffect(() => {
-    const filtered = categories[categoriesIndexes.favorites].selected
-      ? state.list.filter((item) => state.favorites.includes(item.tokenAddress))
-      : state.list;
+    console.log("categories", categories);
+    console.log("state.list", state.list);
+    console.log("state.favorites", state.favorites);
+    // const filtered = categories[categoriesIndexes.favorites].selected
+    //   ? state.list.filter((item) =>
+    //       state.favorites.includes(item.collectionAddress)
+    //     )
+    //   : state.list;
     const filteredByCollection = collectionAddress
-      ? filtered.filter(
-          (item) => (item as any).collectionAddress === collectionAddress
+      ? state.list.filter(
+          (item) => item.collectionAddress === collectionAddress
         )
-      : filtered;
+      : state.list;
     const filteredByMasterNFT = filteredByCollection.filter(
-      (item) => (item as any).collectionAddress !== item.tokenAddress
+      (item) => item.tokenAddress !== item.collectionAddress
     );
-    setItemsToDisplay(
-      filteredByMasterNFT.slice(0, numberOfItems).map((item) => ({
-        ...item,
-        likes: state.likes[item.tokenAddress] ?? 0,
-        like: state.favorites.includes(item.tokenAddress),
-      }))
-    );
+    setItemsToDisplay(filteredByMasterNFT);
   }, [categories, state.list, state.favorites, numberOfItems]);
 
-  const setItem = (info: DeployedTokenInfo) =>
-    dispatch({
-      type: "SET_TOKEN_INFO",
-      payload: { tokenAddress: info.tokenAddress, info },
-    });
+  // const setItem = (info: DeployedTokenInfo) =>
+  //   dispatch({
+  //     type: "SET_TOKEN_INFO",
+  //     payload: { tokenAddress: info.tokenAddress, info },
+  //   });
 
-  const setItems = (items: DeployedTokenInfo[]) =>
+  const setItems = (items: NftInfo[]) =>
     dispatch({
       type: "SET_ITEMS",
       payload: { items },
@@ -168,31 +175,33 @@ export default function TokenList({
       payload: { tokenAddress },
     });
 
-  const setBid = (tokenAddress: string, bid: Order) =>
-    dispatch({
-      type: "SET_BID",
-      payload: { tokenAddress, bid },
-    });
+  // const setBid = (tokenAddress: string, bid: Order) =>
+  //   dispatch({
+  //     type: "SET_BID",
+  //     payload: { tokenAddress, bid },
+  //   });
 
-  const setOffer = (tokenAddress: string, offer: Order) =>
-    dispatch({
-      type: "SET_OFFER",
-      payload: { tokenAddress, offer },
-    });
+  // const setOffer = (tokenAddress: string, offer: Order) =>
+  //   dispatch({
+  //     type: "SET_OFFER",
+  //     payload: { tokenAddress, offer },
+  //   });
 
-  const setIsPriceLoaded = (tokenAddress: string, isPriceLoaded: boolean) =>
-    dispatch({
-      type: "SET_IS_PRICE_LOADED",
-      payload: { tokenAddress, isPriceLoaded },
-    });
+  // const setIsPriceLoaded = (tokenAddress: string, isPriceLoaded: boolean) =>
+  //   dispatch({
+  //     type: "SET_IS_PRICE_LOADED",
+  //     payload: { tokenAddress, isPriceLoaded },
+  //   });
 
-  const setLikes = (likes: { tokenAddress: string; likes: number }[]) =>
+  const setLikes = (
+    likes: { collectionAddress: string; tokenAddress: string; likes: number }[]
+  ) =>
     dispatch({
-      type: "SET_LIKES",
+      type: "SET_NFT_LIKES",
       payload: likes,
     });
 
-  const addLike = async (tokenAddress: string) => {
+  const addLike = async (collectionAddress: string, tokenAddress: string) => {
     addFavorite(tokenAddress);
     const index = state.list.findIndex(
       (elm) => elm.tokenAddress === tokenAddress
@@ -200,6 +209,7 @@ export default function TokenList({
     if (index !== -1) {
       setLikes([
         {
+          collectionAddress,
           tokenAddress: state.list[index].tokenAddress,
           likes: (state.list[index].likes ?? 0) + 1,
         },
@@ -243,7 +253,7 @@ export default function TokenList({
         if (DEBUG) console.log("address", userAddress);
       }
 
-      const searchResult = await algoliaGetTokenList({
+      const searchResult = await algoliaGetNFTs({
         query: search,
         page: page - 1,
         hitsPerPage: numberOfItems < 20 ? 20 : numberOfItems,
@@ -251,16 +261,12 @@ export default function TokenList({
         favorites: onlyFavorites ? state.favorites : [],
         ownedByAddress: onlyOwned ? userAddress : undefined,
         issuedByAddress: onlyIssued ? userAddress : undefined,
-        collectionAddress,
+        collectionAddress: selectedCollection,
       });
+      console.log("searchResult", searchResult);
 
-      let newItems: DeployedTokenInfo[] = searchResult?.hits ?? [];
-      // Sort to put TESTME token first
-      newItems.sort((a, b) => {
-        if (a.symbol === "TESTME") return -1;
-        if (b.symbol === "TESTME") return 1;
-        return 0;
-      });
+      let newItems: NftInfo[] = searchResult?.hits ?? [];
+
       setItems(newItems);
       setTotalPages(searchResult?.nbPages ?? 1);
 
@@ -272,34 +278,35 @@ export default function TokenList({
         });
     };
     fetchTokenList();
-  }, [categories, numberOfItems, page, search, refreshCounter]);
+  }, [
+    categories,
+    numberOfItems,
+    page,
+    search,
+    refreshCounter,
+    selectedCollection,
+  ]);
 
-  const setTokenState = (tokenState: TokenState) =>
-    dispatch({
-      type: "SET_TOKEN_STATE",
-      payload: { tokenAddress: tokenState.tokenAddress, tokenState },
-    });
-
-  useEffect(() => {
-    const fetchTokenState = async () => {
-      const tokensToFetch: DeployedTokenInfo[] = [];
-      for (const item of state.list) {
-        if (!state.tokens[item.tokenAddress]?.tokenState === undefined)
-          tokensToFetch.push(item);
-      }
-      for (const token of tokensToFetch) {
-        const state = await getTokenState({
-          tokenAddress: token.tokenAddress,
-          info: token,
-        });
-        if (state.success) {
-          if (DEBUG) console.log("fetchTokenState", token.tokenAddress);
-          setTokenState(state.tokenState);
-        }
-      }
-    };
-    fetchTokenState();
-  }, [state.list]);
+  // useEffect(() => {
+  //   const fetchTokenState = async () => {
+  //     const tokensToFetch: DeployedTokenInfo[] = [];
+  //     for (const item of state.list) {
+  //       if (!state.tokens[item.tokenAddress]?.tokenState === undefined)
+  //         tokensToFetch.push(item);
+  //     }
+  //     for (const token of tokensToFetch) {
+  //       const state = await getTokenState({
+  //         tokenAddress: token.tokenAddress,
+  //         info: token,
+  //       });
+  //       if (state.success) {
+  //         if (DEBUG) console.log("fetchTokenState", token.tokenAddress);
+  //         setTokenState(state.tokenState);
+  //       }
+  //     }
+  //   };
+  //   fetchTokenState();
+  // }, [state.list]);
 
   // useEffect(() => {
   //   const fetchLikes = async () => {
@@ -506,7 +513,11 @@ export default function TokenList({
             <div className="lg:flex mt-6">
               {/* Sidebar */}
               {siteType === "nft" && hideSidebar !== true && (
-                <Sidebar collections={collections} />
+                <Sidebar
+                  collections={collections}
+                  selectedCollection={selectedCollection}
+                  setSelectedCollection={setListSelectedCollection}
+                />
               )}
               {/* end sidebar */}
               {/* Content */}
@@ -516,7 +527,7 @@ export default function TokenList({
                     <div className="block rounded-2.5xl border border-jacarta-100 bg-white p-[1.1875rem] transition-shadow hover:shadow-lg dark:border-jacarta-700 dark:bg-jacarta-700">
                       <figure className="relative">
                         <Link
-                          href={`/nft/${elm.tokenAddress}`}
+                          href={`/nft/${elm.collectionAddress}/${elm.tokenAddress}`}
                           className="block w-full h-full"
                         >
                           {/* <Image
@@ -547,7 +558,9 @@ export default function TokenList({
                         </Link>
                         <div className="absolute top-3 right-3 flex items-center space-x-1 rounded-md bg-white p-2 dark:bg-jacarta-700">
                           <span
-                            onClick={() => addLike(elm.tokenAddress)}
+                            onClick={() =>
+                              addLike(elm.collectionAddress, elm.tokenAddress)
+                            }
                             className={`js-likes relative cursor-pointer before:absolute before:h-4 before:w-4 before:bg-[url('../img/heart-fill.svg')] before:bg-cover before:bg-center before:bg-no-repeat before:opacity-0 ${
                               isLiked(elm.tokenAddress)
                                 ? "js-likes--active"
@@ -585,8 +598,10 @@ export default function TokenList({
                         </Link>
 
                         <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                          {state.tokens[elm.tokenAddress]?.offer?.price
-                            ? state.tokens[
+                          {state.nfts?.[elm.collectionAddress]?.[
+                            elm.tokenAddress
+                          ]?.offer?.price
+                            ? state.nfts?.[elm.collectionAddress]?.[
                                 elm.tokenAddress
                               ]?.offer?.price.toString() + ` MINA`
                             : ""}

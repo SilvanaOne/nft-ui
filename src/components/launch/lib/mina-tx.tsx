@@ -5,8 +5,13 @@ import {
   LineId,
   messages,
 } from "./messages";
-import { getResult, getTransactionStatus, sendTransaction } from "@/lib/api";
-import { TokenInfo, TokenAction } from "@/lib/token";
+import {
+  getResult,
+  getTransactionStatus,
+  sendTransaction,
+  getNFTInfo,
+} from "@/lib/api";
+import { TokenAction } from "@/lib/token";
 // import { verifyFungibleTokenState } from "@/tokens/lib/verify";
 import { sleep } from "@/lib/sleep";
 import { debug } from "@/lib/debug";
@@ -426,104 +431,81 @@ export async function waitForMinaTx(params: {
 }
 
 export async function waitForContractVerification(params: {
-  tokenAddress: string;
-  adminContractAddress: string;
-  adminAddress: string;
-  tokenId: string;
+  collectionAddress: string;
+  nftAddress?: string;
   groupId: GroupId;
   updateTimelineItem: UpdateTimelineItemFunction;
-  info: TokenInfo;
 }): Promise<boolean> {
-  const {
-    groupId,
-    updateTimelineItem,
-    tokenAddress,
-    adminContractAddress,
-    adminAddress,
-    info,
-    tokenId,
-  } = params;
+  const { groupId, updateTimelineItem, collectionAddress, nftAddress } = params;
 
   let count = 0;
   const timestamp = Date.now();
-  // let verified = false;
-  // try {
-  //   verified = await verifyFungibleTokenState({
-  //     tokenContractAddress: tokenAddress,
-  //     adminContractAddress,
-  //     adminAddress,
-  //     info,
-  //     created: timestamp,
-  //     updated: timestamp,
-  //     tokenId,
-  //     rating: 100,
-  //     status: "created",
-  //   });
-  // } catch (error) {
-  //   log.error("Error verifying token contract state", { error });
-  // }
-  // if (DEBUG)
-  //   console.log("Waiting for contract state to be verified...", verified);
-  // while (!verified && count++ < 100) {
-  //   if (DEBUG)
-  //     console.log("Waiting for contract state to be verified...", verified);
-  //   await sleep(10000);
-  //   try {
-  //     verified = await verifyFungibleTokenState({
-  //       tokenContractAddress: tokenAddress,
-  //       adminContractAddress,
-  //       adminAddress,
-  //       tokenId,
-  //       info,
-  //       created: timestamp,
-  //       updated: timestamp,
-  //       rating: 100,
-  //       status: "created",
-  //     });
-  //   } catch (error) {
-  //     log.error("Error verifying token contract state", { error });
-  //   }
-  // }
-  // if (DEBUG) console.log("Final status", { verified, count });
-  // if (!verified) {
-  //   updateTimelineItem({
-  //     groupId,
-  //     update: {
-  //       lineId: messages.contractStateVerified.lineId,
-  //       content: "Failed to verify token contract state",
-  //       status: "error",
-  //     },
-  //   });
-  //   log.error(
-  //     "waitForContractVerification: Failed to verify token contract state",
-  //     {
-  //       verified,
-  //     }
-  //   );
-  //   return false;
-  // }
+  let verified = false;
+  try {
+    const info = await getNFTInfo({
+      collectionAddress,
+      nftAddress,
+    });
+    verified = info.success;
+  } catch (error) {
+    log.error("Error verifying token contract state", { error, params });
+  }
+  if (DEBUG)
+    console.log("Waiting for contract state to be verified...", verified);
+  while (!verified && count++ < 100) {
+    if (DEBUG)
+      console.log("Waiting for contract state to be verified...", verified);
+    await sleep(10000);
+    try {
+      const info = await getNFTInfo({
+        collectionAddress,
+        nftAddress,
+      });
+      verified = info.success;
+    } catch (error) {
+      log.error("Error verifying token contract state", { error });
+    }
+  }
+  if (DEBUG) console.log("Final status", { verified, count });
+  if (!verified) {
+    updateTimelineItem({
+      groupId,
+      update: {
+        lineId: messages.contractStateVerified.lineId,
+        content: "Failed to verify contract state",
+        status: "error",
+      },
+    });
+    log.error(
+      "waitForContractVerification: Failed to verify token contract state",
+      {
+        verified,
+      }
+    );
+    return false;
+  }
 
-  // const tokenStateVerifiedMsg = (
-  //   <>
-  //     <a
-  //       href={`${explorerTokenUrl()}${tokenId}`}
-  //       className="text-accent hover:underline"
-  //       target="_blank"
-  //       rel="noopener noreferrer"
-  //     >
-  //       Token contract
-  //     </a>{" "}
-  //     state is verified
-  //   </>
-  // );
-  // updateTimelineItem({
-  //   groupId,
-  //   update: {
-  //     lineId: messages.contractStateVerified.lineId,
-  //     content: tokenStateVerifiedMsg,
-  //     status: "success",
-  //   },
-  // });
+  const tokenStateVerifiedMsg = (
+    <>
+      <a
+        href={`${explorerAccountUrl()}${nftAddress ?? collectionAddress}`}
+        className="text-accent hover:underline"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Contract
+      </a>{" "}
+      state is verified
+    </>
+  );
+  updateTimelineItem({
+    groupId,
+    update: {
+      lineId: messages.contractStateVerified.lineId,
+      content: tokenStateVerifiedMsg,
+      status: "success",
+    },
+  });
 
   return true;
 }

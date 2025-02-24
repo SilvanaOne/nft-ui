@@ -1,11 +1,11 @@
 import Image from "next/image";
-import { DeployedTokenInfo } from "@/lib/token";
+import { CollectionInfo, NftInfo } from "@silvana-one/api";
 import TokenList from "@/components/home/TokenList";
 // import Charts from "./Charts";
 // import Items from "./Items";
 // import Records from "./Records";
 
-export default function Collection({ item }: { item: DeployedTokenInfo }) {
+export default function Collection({ item }: { item: CollectionInfo }) {
   return (
     <section className="relative py-24">
       <picture className="pointer-events-none absolute inset-0 -z-10 dark:hidden">
@@ -87,7 +87,7 @@ export default function Collection({ item }: { item: DeployedTokenInfo }) {
               title={undefined}
               showIcon={false}
               hideSidebar={true}
-              collectionAddress={item.tokenAddress}
+              collectionAddress={item.collectionAddress}
               key="collection-list"
             />
           </div>

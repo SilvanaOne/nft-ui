@@ -3,12 +3,11 @@ import { useTokenDetails } from "@/context/details";
 import Image from "next/image";
 import Link from "next/link";
 import { algoliaGetCollection } from "@/lib/search";
-import { DeployedTokenInfo, TokenState } from "@/lib/token";
+import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import { getTokenState } from "@/lib/state";
 import { socials_item } from "@/data/socials";
 import {
   BlockberryTokenHolder,
@@ -21,6 +20,7 @@ import { Order } from "@/components/orderbook/OrderBook";
 import Banner from "./Banner";
 import Profile from "./Profile";
 import Collection from "./Collection";
+import { getNFTInfo } from "@/lib/api";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
 function formatBalance(num: number | undefined): string {
@@ -50,119 +50,61 @@ export function Socials({ i }: { i: number }) {
 }
 
 interface ItemDetailsProps {
-  tokenAddress: string;
+  collectionAddress: string;
 }
 
-export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
+export default function CollectionDetails({
+  collectionAddress,
+}: ItemDetailsProps) {
   const { state, dispatch } = useTokenDetails();
-  const tokenDetails = state.tokens[tokenAddress] || {};
-  const item = tokenDetails.info;
-  const bid = tokenDetails.bid;
-  const offer = tokenDetails.offer;
-  const likes = state.likes[tokenAddress] || 0;
-  const like = state.favorites.includes(tokenAddress);
-  const isPriceLoaded = tokenDetails.isPriceLoaded;
+  const collectionDetails = state.collections[collectionAddress] || {};
+  const item = collectionDetails.info;
+  const likes = collectionDetails.likes || 0;
+  const like = collectionDetails.like;
 
-  const setBid = (bid: Order) =>
-    dispatch({ type: "SET_BID", payload: { tokenAddress, bid } });
-  const setOffer = (offer: Order) =>
-    dispatch({ type: "SET_OFFER", payload: { tokenAddress, offer } });
-  const setIsPriceLoaded = (isPriceLoaded: boolean) =>
+  const setItem = (info: CollectionInfo) =>
     dispatch({
-      type: "SET_IS_PRICE_LOADED",
-      payload: { tokenAddress, isPriceLoaded },
+      type: "SET_COLLECTION_INFO",
+      payload: { collectionAddress, info },
     });
-
-  useEffect(() => {
-    const fetchOrderbook = async () => {
-      if (isPriceLoaded) return;
-
-      // const { offers, bids } = await getOrderbook({
-      //   tokenAddress,
-      //   maxItems: 1,
-      // });
-
-      // const offer: Order | null =
-      //   offers.length === 0
-      //     ? null
-      //     : ({
-      //         amount: Number(offers[0].amount) / 10 ** (item?.decimals ?? 9),
-      //         price: Number(offers[0].price) / 10 ** 9,
-      //         address: offers[0].offerAddress,
-      //         type: "offer",
-      //       } as Order);
-
-      // if (offer) setOffer(offer);
-      // const bid: Order | null =
-      //   bids.length === 0
-      //     ? null
-      //     : ({
-      //         amount: Number(bids[0].amount) / 10 ** (item?.decimals ?? 9),
-      //         price: Number(bids[0].price) / 10 ** 9,
-      //         address: bids[0].bidAddress,
-      //         type: "bid",
-      //       } as Order);
-      // if (bid) setBid(bid);
-      setIsPriceLoaded(true);
-    };
-    fetchOrderbook();
-  }, [tokenAddress]);
-
-  const setItem = (info: DeployedTokenInfo) =>
-    dispatch({ type: "SET_TOKEN_INFO", payload: { tokenAddress, info } });
-
-  const setLikes = (likes: { tokenAddress: string; likes: number }[]) =>
-    dispatch({ type: "SET_LIKES", payload: likes });
 
   const addFavorite = (tokenAddress: string) =>
     dispatch({ type: "ADD_FAVORITE", payload: { tokenAddress } });
 
-  const tokenState = tokenDetails.tokenState;
-  const setTokenState = (tokenState: TokenState) =>
-    dispatch({
-      type: "SET_TOKEN_STATE",
-      payload: { tokenAddress, tokenState },
-    });
-
-  const holders = tokenDetails.holders || [];
+  const holders = collectionDetails.holders || [];
   const setHolders = (holders: BlockberryTokenHolder[]) =>
-    dispatch({ type: "SET_HOLDERS", payload: { tokenAddress, holders } });
+    dispatch({ type: "SET_HOLDERS", payload: { collectionAddress, holders } });
 
-  const transactions = tokenDetails.transactions || [];
+  const transactions = collectionDetails.transactions || [];
   const setTransactions = (transactions: BlockberryTokenTransaction[]) =>
     dispatch({
-      type: "SET_TRANSACTIONS",
-      payload: { tokenAddress, transactions },
+      type: "SET_COLLECTION_TRANSACTIONS",
+      payload: { collectionAddress, transactions },
     });
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
 
   useEffect(() => {
-    if (DEBUG) console.log("tokenDetails", tokenDetails);
-  }, [state]);
-
-  useEffect(() => {
-    if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
+    if (DEBUG) console.log("collectionAddress", { collectionAddress, address });
     const fetchItem = async () => {
-      if (tokenAddress && !item) {
-        const item = await algoliaGetCollection({ tokenAddress });
+      if (collectionAddress && !item) {
+        const item = await algoliaGetCollection({ collectionAddress });
         if (item) {
           setItem(item);
           if (DEBUG) console.log("item", item);
         } else {
-          const tokenState = await getTokenState({ tokenAddress });
-          if (tokenState.success && tokenState.info) setItem(tokenState.info);
-          if (DEBUG) console.log("tokenState", tokenState);
+          const info = await getNFTInfo({ collectionAddress });
+          if (info.success && info.info) setItem(info.info.collection);
         }
       }
     };
     fetchItem();
-  }, [tokenAddress]);
+  }, [collectionAddress]);
 
   useEffect(() => {
-    if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
+    if (DEBUG) console.log("collectionAddress", { collectionAddress, address });
     const fetchItem = async () => {
-      if (tokenAddress) {
+      if (collectionAddress) {
         let userAddress = address;
         if (!userAddress) {
           if (DEBUG) console.log("getting wallet info");
@@ -183,23 +125,21 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
       }
     };
     fetchItem();
-  }, [tokenAddress]);
+  }, [collectionAddress]);
 
   useEffect(() => {
-    if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
+    if (DEBUG) console.log("collectionAddress", { collectionAddress, address });
     const fetchItem = async () => {
-      if (tokenAddress && item && !tokenState) {
-        const tokenStateResult = await getTokenState({
-          tokenAddress,
-          info: item,
+      if (collectionAddress && item && !collectionDetails) {
+        const info = await getNFTInfo({
+          collectionAddress,
         });
 
-        if (tokenStateResult?.success)
-          setTokenState(tokenStateResult.tokenState);
+        if (info.success && info.info) setItem(info.info.collection);
       }
     };
     fetchItem();
-  }, [tokenAddress, item]);
+  }, [collectionAddress, item]);
 
   useEffect(() => {
     const fetchHolders = async () => {
@@ -208,7 +148,7 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
           tokenId: item.tokenId,
         });
         const filteredHolders = holders?.data.filter(
-          (holder) => holder.holderAddress !== tokenAddress
+          (holder) => holder.holderAddress !== collectionAddress
         );
         setHolders(filteredHolders ?? []);
         if (DEBUG) console.log("holders", filteredHolders);
@@ -234,32 +174,12 @@ export default function TokenDetails({ tokenAddress }: ItemDetailsProps) {
     return value && value.length > 0;
   }
 
-  const addLike = async () => {
-    if (!like) {
-      dispatch({ type: "ADD_LIKE", payload: { tokenAddress } });
-    }
-    addFavorite(tokenAddress);
-    let userAddress = address;
-    if (!userAddress) {
-      userAddress = (await getWalletInfo()).address;
-      if (!userAddress)
-        userAddress = (await connectWallet({ openLink: true })).address;
-      if (userAddress) setAddress(userAddress);
-    }
-    if (DEBUG) console.log("userAddress", userAddress);
-    // if (tokenAddress && userAddress) {
-    //   const written = await writeLike({ tokenAddress, userAddress });
-    //   if (DEBUG)
-    //     console.log("written like", { written, tokenAddress, userAddress });
-    // }
-  };
-
   return (
     <>
       {item && "banner" in item && item?.banner && (
         <Banner image={item?.banner} />
       )}
-      {item && <Profile item={item} />}
+      {item && <Profile item={item.masterNFT} />}
       {item && <Collection item={item} />}
     </>
   );

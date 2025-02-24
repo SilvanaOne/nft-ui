@@ -1,8 +1,7 @@
 import {
-  TokenTransactionType,
+  NftTransactionParams,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
-  TokenTransactionParams,
 } from "@silvana-one/api";
 
 export type TokenAction = "mint" | "transfer" | "offer" | "bid" | "orderbook";
@@ -129,7 +128,7 @@ export interface LaunchCollectionData {
 }
 
 export type TokenActionTransactionParams = Exclude<
-  TokenTransactionParams,
+  NftTransactionParams,
   LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams
 >;
 
@@ -138,42 +137,42 @@ export interface TokenActionData {
   txs: TokenActionTransactionParams[];
 }
 
-export interface TokenInfo {
-  symbol: string;
-  name?: string;
-  description?: string;
-  image?: string;
-  twitter?: string;
-  discord?: string;
-  telegram?: string;
-  instagram?: string;
-  facebook?: string;
-  website?: string;
-  tokenContractCode?: string;
-  adminContractsCode?: string[];
-  data?: object;
-  isMDA?: boolean;
-  launchpad?: string;
-}
+// export interface TokenInfo {
+//   symbol: string;
+//   name?: string;
+//   description?: string;
+//   image?: string;
+//   twitter?: string;
+//   discord?: string;
+//   telegram?: string;
+//   instagram?: string;
+//   facebook?: string;
+//   website?: string;
+//   tokenContractCode?: string;
+//   adminContractsCode?: string[];
+//   data?: object;
+//   isMDA?: boolean;
+//   launchpad?: string;
+// }
 
-export interface TokenState {
-  tokenAddress: string;
-  tokenId: string;
-  adminContractAddress: string;
-  adminAddress: string;
-  adminTokenBalance: number;
-  totalSupply: number;
-  isPaused: boolean;
-  decimals: number;
-  tokenSymbol: string;
-  verificationKeyHash: string;
-  uri: string;
-  version: number;
-  adminTokenSymbol: string;
-  adminUri: string;
-  adminVerificationKeyHash: string;
-  adminVersion: number;
-}
+// export interface TokenState {
+//   tokenAddress: string;
+//   tokenId: string;
+//   adminContractAddress: string;
+//   adminAddress: string;
+//   adminTokenBalance: number;
+//   totalSupply: number;
+//   isPaused: boolean;
+//   decimals: number;
+//   tokenSymbol: string;
+//   verificationKeyHash: string;
+//   uri: string;
+//   version: number;
+//   adminTokenSymbol: string;
+//   adminUri: string;
+//   adminVerificationKeyHash: string;
+//   adminVersion: number;
+// }
 
 // export interface DeployedTokenInfo extends TokenInfo, TokenState {
 //   created: number;
@@ -184,13 +183,13 @@ export interface TokenState {
 //   status?: string;
 // }
 
-export interface TokenDeployParams {
-  tokenPrivateKey: string;
-  adminContractPrivateKey: string;
-  tokenPublicKey: string;
-  tokenId: string;
-  adminContractPublicKey: string;
-}
+// export interface TokenDeployParams {
+//   tokenPrivateKey: string;
+//   adminContractPrivateKey: string;
+//   tokenPublicKey: string;
+//   tokenId: string;
+//   adminContractPublicKey: string;
+// }
 
 export interface NFTDataSerialized {
   type: "nft" | "collection";
@@ -246,4 +245,4 @@ export interface CollectionDataSerialized extends NFTDataSerialized {
   minted?: number;
 }
 
-export type DeployedTokenInfo = NFTDataSerialized | CollectionDataSerialized;
+// export type DeployedTokenInfo = NFTDataSerialized | CollectionDataSerialized;

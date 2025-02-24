@@ -31,6 +31,11 @@ export async function createIpfsURL(params: {
   return gateway + hash + (apiToken ? "?pinataGatewayToken=" + apiToken : "");
 }
 
+export async function publicIpfsURL(params: { hash: string }): Promise<string> {
+  let { hash } = params;
+  return "https://gateway.pinata.cloud/ipfs/" + hash;
+}
+
 export async function pinJson(params: {
   data: object;
   name?: string;

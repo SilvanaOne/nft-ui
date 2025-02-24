@@ -141,6 +141,7 @@ const LaunchToken: React.FC = () => {
       setLikes,
       isError,
       getMintStatistics,
+      setIsLaunched,
     });
   };
 
@@ -150,7 +151,15 @@ const LaunchToken: React.FC = () => {
         <>
           {state.tokenData && (
             <TokenProgress
-              caption={state.isLaunched ? "Token Launched" : "Launching Token"}
+              caption={
+                state.isLaunched
+                  ? state.tokenData.mintType === "collection"
+                    ? "NFT Collection Launched"
+                    : "NFT Minted"
+                  : state.tokenData.mintType === "collection"
+                  ? "Launching NFT Collection"
+                  : "Minting NFT"
+              }
               items={state.timelineItems}
               tokenAddress={state.tokenAddress}
               image={state.tokenData.imageURL ?? "/img/minanft.png"}

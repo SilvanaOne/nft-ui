@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { DeployedTokenInfo } from "@/lib/token";
+import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import Link from "next/link";
 
 const status = [
@@ -23,11 +23,22 @@ const currencies = ["MINA", "USD", "WETH"];
 
 export default function Sidebar({
   collections,
+  selectedCollection,
+  setSelectedCollection,
 }: {
-  collections: DeployedTokenInfo[];
+  collections: CollectionInfo[];
+  selectedCollection: string | undefined;
+  setSelectedCollection: (collection: string | undefined) => void;
 }) {
   const [currency, setCurrency] = useState(currencies[0]);
+  const [sideBarSelectedCollection, setSideBarSelectedCollection] = useState<
+    string | undefined
+  >(selectedCollection);
   // const [category, setCategory] = useState(categories[0]);
+
+  useEffect(() => {
+    setSelectedCollection(sideBarSelectedCollection);
+  }, [sideBarSelectedCollection]);
 
   return (
     <div className="lg:w-1/5 mb-10 js-collections-sidebar lg:h-[calc(100vh_-_232px)] lg:overflow-auto lg:sticky lg:top-32 lg:mr-12 pr-4 scrollbar-custom divide-y divide-jacarta-100 dark:divide-jacarta-600">
@@ -67,13 +78,21 @@ export default function Sidebar({
                   <input
                     type="checkbox"
                     id="terms"
+                    checked={selectedCollection === elm.collectionAddress}
+                    onChange={() => {
+                      if (sideBarSelectedCollection === elm.collectionAddress) {
+                        setSideBarSelectedCollection(undefined);
+                      } else {
+                        setSideBarSelectedCollection(elm.collectionAddress);
+                      }
+                    }}
                     className="h-5 w-5 mr-3 rounded border-jacarta-200 text-accent checked:bg-accent focus:ring-accent/20 focus:ring-offset-0 dark:border-jacarta-500 dark:bg-jacarta-600"
                   />
                   <figure className="relative mr-2 w-8 shrink-0 lg:mr-4 lg:w-10">
                     <Image
                       width={40}
                       height={40}
-                      src={elm.image}
+                      src={elm.masterNFT.image}
                       alt="avatar 1"
                       className="rounded-2lg"
                       loading="lazy"
@@ -101,12 +120,12 @@ export default function Sidebar({
                       href={`/collection/${elm.collectionAddress}`}
                       className="hover:text-accent"
                     >
-                      {elm.name}
+                      {elm.collectionName}
                     </Link>
                   </span>
-                  <span className="ml-auto text-sm dark:text-jacarta-300">
+                  {/* <span className="ml-auto text-sm dark:text-jacarta-300">
                     {"minted" in elm && elm.minted ? elm.minted : 0}
-                  </span>
+                  </span> */}
                 </label>
               </li>
             ))}

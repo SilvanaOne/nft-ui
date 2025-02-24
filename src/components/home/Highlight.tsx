@@ -1,9 +1,9 @@
 import React from "react";
 
-import { DeployedTokenInfo } from "@/lib/token";
+import { NftInfo } from "@silvana-one/api";
 
 interface HighlightProps {
-  item: DeployedTokenInfo;
+  item: NftInfo;
   attribute: string;
 }
 

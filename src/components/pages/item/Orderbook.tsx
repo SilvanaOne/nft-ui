@@ -1,11 +1,6 @@
 import { Orderbook, Order } from "@/components/orderbook/OrderBook";
-import {
-  MintAddress,
-  TokenAction,
-  TokenState,
-  TokenActionData,
-  TokenActionTransactionParams,
-} from "@/lib/token";
+import { TokenAction } from "@/lib/token";
+import { NftInfo } from "@silvana-one/api";
 import { useState, useEffect } from "react";
 import {
   TokenBuyTransactionParams,
@@ -15,18 +10,20 @@ import { useContext } from "react";
 import { AddressContext } from "@/context/address";
 
 export function OrderbookTab({
-  tokenAddress,
-  tokenState,
+  collectionAddress,
+  nftAddress,
+  nftInfo,
   symbol,
   decimals,
   onSubmit,
   tab,
 }: {
-  tokenAddress: string;
-  tokenState: TokenState | undefined;
+  collectionAddress: string;
+  nftAddress: string;
+  nftInfo: NftInfo;
   symbol: string;
   decimals: number;
-  onSubmit: (data: TokenActionData) => void;
+  onSubmit: (data: any) => void;
   tab: TokenAction;
 }) {
   const [bids, setBids] = useState<Order[]>([]);
@@ -35,26 +32,26 @@ export function OrderbookTab({
   const { address } = useContext(AddressContext);
 
   const handleSubmit = (order: Order) => {
-    onSubmit({
-      symbol,
-      txs: [
-        {
-          txType:
-            tab === "orderbook"
-              ? order.type === "offer"
-                ? "token:offer:buy"
-                : "token:bid:sell"
-              : order.type === "offer"
-              ? "token:offer:withdraw"
-              : "token:bid:withdraw",
-          amount: order.amount * 10 ** decimals,
-          tokenAddress,
-          sender: tokenState?.adminAddress,
-          offerAddress: order.type === "offer" ? order.address : undefined,
-          bidAddress: order.type === "bid" ? order.address : undefined,
-        } as TokenBuyTransactionParams | TokenSellTransactionParams,
-      ],
-    });
+    // onSubmit({
+    //   symbol,
+    //   txs: [
+    //     {
+    //       txType:
+    //         tab === "orderbook"
+    //           ? order.type === "offer"
+    //             ? "token:offer:buy"
+    //             : "token:bid:sell"
+    //           : order.type === "offer"
+    //           ? "token:offer:withdraw"
+    //           : "token:bid:withdraw",
+    //       amount: order.amount * 10 ** decimals,
+    //       tokenAddress,
+    //       sender: tokenState?.adminAddress,
+    //       offerAddress: order.type === "offer" ? order.address : undefined,
+    //       bidAddress: order.type === "bid" ? order.address : undefined,
+    //     } as TokenBuyTransactionParams | TokenSellTransactionParams,
+    //   ],
+    // });
   };
 
   return (
@@ -68,7 +65,7 @@ export function OrderbookTab({
             offerSymbol="MINA"
             priceSymbol={"MINA"}
             tab={tab}
-            enableButtons={tokenState !== undefined}
+            enableButtons={true}
             onSubmit={handleSubmit}
             offersTitle={"Offers"}
             bidsTitle={"Bids"}

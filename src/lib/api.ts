@@ -14,6 +14,8 @@ import {
   TransactionStatus,
   sendTransaction as sendTransactionApi,
   SendTransactionReply,
+  getNftInfo,
+  NftRequestAnswer,
 } from "@silvana-one/api";
 import { getChain } from "./chain";
 
@@ -27,16 +29,41 @@ config({
   chain,
 });
 
+export async function getNFTInfo(params: {
+  collectionAddress: string;
+  nftAddress?: string;
+}): Promise<
+  | {
+      success: true;
+      info: NftRequestAnswer;
+    }
+  | {
+      success: false;
+      error?: string;
+    }
+> {
+  const info = (
+    await getNftInfo({
+      body: params,
+    })
+  ).data;
+  if (!info) return { success: false, error: "No info" };
+  return { success: true, info };
+}
+
 export async function buildCollectionLaunchTransaction(
   params: LaunchNftCollectionStandardAdminParams
 ): Promise<
   | {
       success: true;
       tx: NftTransaction;
-      privateMetadata: string | undefined;
-      metadataFileName: string | undefined;
-      privateKeys: string | undefined;
-      keysFileName: string | undefined;
+      collectionAddress: string;
+      privateMetadata: string;
+      metadataFileName: string;
+      privateKeys: string;
+      keysFileName: string;
+      storage: string;
+      metadataRoot: string;
     }
   | {
       success: false;
@@ -49,6 +76,11 @@ export async function buildCollectionLaunchTransaction(
     })
   ).data;
   if (!tx) return { success: false, error: "Failed to build transaction" };
+  if (!tx.privateMetadata)
+    return { success: false, error: "Failed to get private metadata" };
+  if (!tx.storage) return { success: false, error: "Failed to get storage" };
+  if (!tx.metadataRoot)
+    return { success: false, error: "Failed to get metadata root" };
 
   if (!tx.request || !("adminContractAddress" in tx.request))
     return { success: false, error: "Failed to get admin contract address" };
@@ -65,42 +97,42 @@ export async function buildCollectionLaunchTransaction(
   let privateKeys: string | undefined = undefined;
   let keysFileName: string | undefined = undefined;
 
-  if (tx?.privateMetadata && collectionAddress) {
-    metadataFileName = `collection-${collectionAddress}-metadata.json`;
-    privateMetadata = tx.privateMetadata;
-    // Remove private metadata from the transaction
-    tx.privateMetadata = undefined;
+  metadataFileName = `collection-${collectionAddress}-metadata.json`;
+  privateMetadata = tx.privateMetadata;
+  // Remove private metadata from the transaction
+  tx.privateMetadata = undefined;
+
+  keysFileName = `collection-${collectionAddress}-keys.json`;
+  privateKeys = JSON.stringify(
+    {
+      collectionName: tx?.collectionName,
+      collectionAddress,
+      masterNFT: tx?.nftName,
+      adminContractAddress,
+      collectionContractPrivateKey: tx?.request?.collectionContractPrivateKey,
+      adminContractPrivateKey: tx?.request?.adminContractPrivateKey,
+      storage: tx?.storage,
+      metadataRoot: tx?.metadataRoot,
+    },
+    null,
+    2
+  );
+  // Remove private keys from the request
+  if (tx.request) {
+    tx.request.collectionContractPrivateKey = undefined;
+    tx.request.adminContractPrivateKey = undefined;
   }
 
-  if (collectionAddress) {
-    keysFileName = `collection-${collectionAddress}-keys.json`;
-    privateKeys = JSON.stringify(
-      {
-        collectionName: tx?.collectionName,
-        collectionAddress,
-        masterNFT: tx?.nftName,
-        adminContractAddress,
-        collectionContractPrivateKey: tx?.request?.collectionContractPrivateKey,
-        adminContractPrivateKey: tx?.request?.adminContractPrivateKey,
-        storage: tx?.storage,
-        metadataRoot: tx?.metadataRoot,
-      },
-      null,
-      2
-    );
-    // Remove private keys from the request
-    if (tx.request) {
-      tx.request.collectionContractPrivateKey = undefined;
-      tx.request.adminContractPrivateKey = undefined;
-    }
-  }
   return {
     success: true,
     tx,
+    collectionAddress,
     privateMetadata,
     metadataFileName,
     privateKeys,
     keysFileName,
+    storage: tx.storage,
+    metadataRoot: tx.metadataRoot,
   };
 }
 

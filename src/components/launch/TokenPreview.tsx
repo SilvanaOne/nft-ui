@@ -30,7 +30,7 @@ export function TokenPreview({
               <Image
                 width={230}
                 height={230}
-                src={image ?? "/launchpad.png"}
+                src={image ?? "/img/minanft.png"}
                 alt="token 5"
                 className="w-full rounded-[0.625rem]"
                 loading="lazy"
@@ -60,17 +60,13 @@ export function TokenPreview({
               </span>
             </div>
           </figure>
-          <div className="mt-7 flex items-center justify-between">
+
+          <div className="mt-6  mb-2 text-sm">
             <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white">
               {name}
             </span>
-          </div>
-          <div className="mt-2  mb-8 text-sm">
-            <span className="text-jacarta-500 dark:text-jacarta-300 float-left">
-              {symbol}
-            </span>
             <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-              {`Supply: ${totalSupply}`}
+              {symbol}
             </span>
           </div>
         </div>

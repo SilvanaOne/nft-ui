@@ -1,77 +1,134 @@
 "use client";
 
 import React, { createContext, useReducer, useContext, ReactNode } from "react";
-import { DeployedTokenInfo, TokenState, TokenAction } from "@/lib/token";
+import { TokenAction } from "@/lib/token";
+import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import { Order } from "@/components/orderbook/OrderBook";
 import {
   BlockberryTokenTransaction,
   BlockberryTokenHolder,
 } from "@/lib/blockberry-tokens";
 import { log } from "@/lib/log";
-interface TokenDetailsState {
-  info: DeployedTokenInfo | undefined;
-  tokenState: TokenState | undefined;
-  holders: BlockberryTokenHolder[];
+interface NFTDetailsState {
+  info: NftInfo | undefined;
   transactions: BlockberryTokenTransaction[];
   action: TokenAction | undefined;
   bid: Order | undefined;
   offer: Order | undefined;
   isPriceLoaded: boolean;
+  likes: number;
+  like: boolean;
+}
+
+interface CollectionDetailsState {
+  info: CollectionInfo | undefined;
+  holders: BlockberryTokenHolder[];
+  transactions: BlockberryTokenTransaction[];
+  action: TokenAction | undefined;
+  likes: number;
+  like: boolean;
 }
 
 interface TokenDetailsStates {
-  tokens: { [tokenAddress: string]: TokenDetailsState };
+  nfts: {
+    [collectionAddress: string]: { [tokenAddress: string]: NFTDetailsState };
+  };
+  collections: { [collectionAddress: string]: CollectionDetailsState };
   likes: { [tokenAddress: string]: number };
-  list: DeployedTokenInfo[];
+  list: NftInfo[];
   favorites: string[];
 }
 type Action =
   | {
-      type: "SET_TOKEN_INFO";
-      payload: { tokenAddress: string; info: DeployedTokenInfo };
+      type: "SET_NFT_INFO";
+      payload: {
+        collectionAddress: string;
+        tokenAddress: string;
+        info: NftInfo;
+      };
     }
   | {
-      type: "SET_TOKEN_STATE";
-      payload: { tokenAddress: string; tokenState: TokenState };
+      type: "SET_COLLECTION_INFO";
+      payload: { collectionAddress: string; info: CollectionInfo };
     }
   | {
-      type: "SET_LIKES";
-      payload: { tokenAddress: string; likes: number }[];
+      type: "SET_NFT_LIKES";
+      payload: {
+        collectionAddress: string;
+        tokenAddress: string;
+        likes: number;
+      }[];
     }
   | {
-      type: "ADD_LIKE";
-      payload: { tokenAddress: string };
+      type: "SET_COLLECTION_LIKES";
+      payload: { collectionAddress: string; likes: number };
+    }
+  | {
+      type: "ADD_NFT_LIKE";
+      payload: { collectionAddress: string; tokenAddress: string };
+    }
+  | {
+      type: "ADD_COLLECTION_LIKE";
+      payload: { collectionAddress: string };
     }
   | {
       type: "SET_HOLDERS";
-      payload: { tokenAddress: string; holders: BlockberryTokenHolder[] };
+      payload: { collectionAddress: string; holders: BlockberryTokenHolder[] };
     }
   | {
-      type: "SET_TRANSACTIONS";
+      type: "SET_NFT_TRANSACTIONS";
       payload: {
+        collectionAddress: string;
         tokenAddress: string;
         transactions: BlockberryTokenTransaction[];
       };
     }
   | {
-      type: "SET_ACTION";
-      payload: { tokenAddress: string; action: TokenAction | undefined };
+      type: "SET_COLLECTION_TRANSACTIONS";
+      payload: {
+        collectionAddress: string;
+        transactions: BlockberryTokenTransaction[];
+      };
     }
   | {
-      type: "SET_BID";
-      payload: { tokenAddress: string; bid: Order | undefined };
+      type: "SET_NFT_ACTION";
+      payload: {
+        collectionAddress: string;
+        tokenAddress: string;
+        action: TokenAction | undefined;
+      };
     }
   | {
-      type: "SET_OFFER";
-      payload: { tokenAddress: string; offer: Order | undefined };
+      type: "SET_COLLECTION_ACTION";
+      payload: { collectionAddress: string; action: TokenAction | undefined };
     }
   | {
-      type: "SET_IS_PRICE_LOADED";
-      payload: { tokenAddress: string; isPriceLoaded: boolean };
+      type: "SET_NFT_BID";
+      payload: {
+        collectionAddress: string;
+        tokenAddress: string;
+        bid: Order | undefined;
+      };
+    }
+  | {
+      type: "SET_COLLECTION_BID";
+      payload: { collectionAddress: string; bid: Order | undefined };
+    }
+  | {
+      type: "SET_NFT_OFFER";
+      payload: {
+        collectionAddress: string;
+        tokenAddress: string;
+        offer: Order | undefined;
+      };
+    }
+  | {
+      type: "SET_COLLECTION_OFFER";
+      payload: { collectionAddress: string; offer: Order | undefined };
     }
   | {
       type: "SET_ITEMS";
-      payload: { items: DeployedTokenInfo[] };
+      payload: { items: NftInfo[] };
     }
   | {
       type: "SET_FAVORITES";
@@ -83,7 +140,8 @@ type Action =
     };
 
 const initialState: TokenDetailsStates = {
-  tokens: {},
+  nfts: {},
+  collections: {},
   list: [],
   favorites: [],
   likes: {},
@@ -107,138 +165,117 @@ const tokenDetailsReducer = (
   action: Action
 ): TokenDetailsStates => {
   switch (action.type) {
-    case "SET_TOKEN_INFO":
+    case "SET_NFT_INFO":
       return {
         ...state,
-        tokens: {
-          ...state.tokens,
-          [action.payload.tokenAddress]: {
-            ...state.tokens[action.payload.tokenAddress],
+        nfts: {
+          ...state.nfts,
+          [action.payload.collectionAddress]: {
+            ...(state.nfts[action.payload.collectionAddress] ?? {}),
+            [action.payload.tokenAddress]: {
+              ...((state.nfts[action.payload.collectionAddress] ?? {})[
+                action.payload.tokenAddress
+              ] ?? {}),
+              info: action.payload.info,
+            },
+          },
+        },
+      };
+
+    case "SET_COLLECTION_INFO":
+      return {
+        ...state,
+        collections: {
+          ...(state.collections ?? {}),
+          [action.payload.collectionAddress]: {
+            ...(state.collections[action.payload.collectionAddress] ?? {}),
             info: action.payload.info,
           },
         },
       };
-    case "SET_TOKEN_STATE":
-      return {
-        ...state,
-        tokens: {
-          ...state.tokens,
-          [action.payload.tokenAddress]: {
-            ...state.tokens[action.payload.tokenAddress],
-            tokenState: action.payload.tokenState,
-          },
-        },
-      };
 
-    case "SET_LIKES":
-      return {
-        ...state,
-        likes: {
-          ...state.likes,
-          ...action.payload.reduce((acc: Record<string, number>, curr) => {
-            acc[curr.tokenAddress] = curr.likes;
-            return acc;
-          }, {}),
-        },
-      };
-
-    case "ADD_LIKE": {
-      const tokenDetails = state.tokens[action.payload.tokenAddress];
-      if (!tokenDetails?.info) return state;
-
-      return {
-        ...state,
-        likes: {
-          ...state.likes,
-          [action.payload.tokenAddress]:
-            (state.likes[action.payload.tokenAddress] || 0) + 1,
-        },
-      };
-    }
     case "SET_HOLDERS":
       return {
         ...state,
-        tokens: {
-          ...state.tokens,
-          [action.payload.tokenAddress]: {
-            ...state.tokens[action.payload.tokenAddress],
+        collections: {
+          ...state.collections,
+          [action.payload.collectionAddress]: {
+            ...state.collections[action.payload.collectionAddress],
             holders: action.payload.holders,
           },
         },
       };
-    case "SET_TRANSACTIONS":
+    case "SET_NFT_TRANSACTIONS":
       return {
         ...state,
-        tokens: {
-          ...state.tokens,
-          [action.payload.tokenAddress]: {
-            ...state.tokens[action.payload.tokenAddress],
+        nfts: {
+          ...state.nfts,
+          [action.payload.collectionAddress]: {
+            ...state.nfts[action.payload.collectionAddress],
+            [action.payload.tokenAddress]: {
+              ...state.nfts[action.payload.collectionAddress][
+                action.payload.tokenAddress
+              ],
+              transactions: action.payload.transactions,
+            },
+          },
+        },
+      };
+    case "SET_COLLECTION_TRANSACTIONS":
+      return {
+        ...state,
+        collections: {
+          ...state.collections,
+          [action.payload.collectionAddress]: {
+            ...state.collections[action.payload.collectionAddress],
             transactions: action.payload.transactions,
           },
         },
       };
-    case "SET_ACTION":
+    case "SET_NFT_ACTION":
       return {
         ...state,
-        tokens: {
-          ...state.tokens,
-          [action.payload.tokenAddress]: {
-            ...state.tokens[action.payload.tokenAddress],
+        nfts: {
+          ...state.nfts,
+          [action.payload.collectionAddress]: {
+            ...state.nfts[action.payload.collectionAddress],
+            [action.payload.tokenAddress]: {
+              ...state.nfts[action.payload.collectionAddress][
+                action.payload.tokenAddress
+              ],
+              action: action.payload.action,
+            },
+          },
+        },
+      };
+    case "SET_COLLECTION_ACTION":
+      return {
+        ...state,
+        collections: {
+          ...state.collections,
+          [action.payload.collectionAddress]: {
+            ...state.collections[action.payload.collectionAddress],
             action: action.payload.action,
           },
         },
       };
-    case "SET_BID":
+    case "SET_NFT_BID":
       return {
         ...state,
-        tokens: {
-          ...state.tokens,
-          [action.payload.tokenAddress]: {
-            ...state.tokens[action.payload.tokenAddress],
-            bid: action.payload.bid,
-          },
-        },
-      };
-    case "SET_OFFER":
-      return {
-        ...state,
-        tokens: {
-          ...state.tokens,
-          [action.payload.tokenAddress]: {
-            ...state.tokens[action.payload.tokenAddress],
-            offer: action.payload.offer,
-          },
-        },
-      };
-    case "SET_IS_PRICE_LOADED":
-      return {
-        ...state,
-        tokens: {
-          ...state.tokens,
-          [action.payload.tokenAddress]: {
-            ...state.tokens[action.payload.tokenAddress],
-            isPriceLoaded: action.payload.isPriceLoaded,
-          },
-        },
-      };
-    case "SET_ITEMS":
-      return {
-        ...state,
-        list: action.payload.items,
-        tokens: {
-          ...state.tokens,
-          ...action.payload.items.reduce<Record<string, TokenDetailsState>>(
-            (acc, curr) => {
-              acc[curr.tokenAddress] = {
-                ...state.tokens[curr.tokenAddress],
-                info: curr,
-              };
-              return acc;
+        nfts: {
+          ...state.nfts,
+          [action.payload.collectionAddress]: {
+            ...state.nfts[action.payload.collectionAddress],
+            [action.payload.tokenAddress]: {
+              ...state.nfts[action.payload.collectionAddress][
+                action.payload.tokenAddress
+              ],
+              bid: action.payload.bid,
             },
-            {}
-          ),
+          },
         },
       };
+
     case "SET_FAVORITES":
       return {
         ...state,
@@ -250,6 +287,11 @@ const tokenDetailsReducer = (
         favorites: state.favorites.includes(action.payload.tokenAddress)
           ? state.favorites
           : [...state.favorites, action.payload.tokenAddress],
+      };
+    case "SET_ITEMS":
+      return {
+        ...state,
+        list: action.payload.items,
       };
     default:
       return state;

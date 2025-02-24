@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import Socials from "./Socials";
 import Image from "next/image";
 import Link from "next/link";
-import { DeployedTokenInfo } from "@/lib/token";
+import { NftInfo } from "@silvana-one/api";
 import { explorerAccountUrl } from "@/lib/chain";
 
-export default function Profile({ item }: { item: DeployedTokenInfo }) {
+export default function Profile({ item }: { item: NftInfo }) {
   const [loved, setLoved] = useState();
 
   return (
@@ -46,7 +46,7 @@ export default function Profile({ item }: { item: DeployedTokenInfo }) {
           <h2 className="mb-2 font-display text-4xl font-medium text-jacarta-700 dark:text-white">
             {item.name ? item.name : "NFT Collection"}
           </h2>
-          <div className="mb-2">
+          {/* <div className="mb-2">
             <span className="text-sm font-bold text-jacarta-400">
               Created by{" "}
             </span>
@@ -61,7 +61,7 @@ export default function Profile({ item }: { item: DeployedTokenInfo }) {
             >
               {"creator" in item && item.creator ? item.creator : "Creator"}
             </Link>
-          </div>
+          </div> */}
           <div className="mb-8">
             <span className="text-sm font-bold text-jacarta-400">
               Collection Address{" "}
