@@ -521,6 +521,11 @@ export function LaunchForm({
                     setImage={setImage}
                     setImageURL={setImageURL}
                     url={imageURL}
+                    label={
+                      mintType === "collection"
+                        ? "NFT collection image"
+                        : "NFT image"
+                    }
                   />
                 </div>
                 {imageError && (
