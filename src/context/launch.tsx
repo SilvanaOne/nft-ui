@@ -11,7 +11,7 @@ import {
   deleteTimelineGroup,
   TimelineItemStatus,
   TimelineGroupStatus,
-} from "@/components/launch/TimeLine";
+} from "@/components/timeline/TimeLine";
 import { LaunchCollectionData } from "@/lib/token";
 import { log } from "@/lib/log";
 interface LaunchTokenState {

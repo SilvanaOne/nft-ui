@@ -16,6 +16,7 @@ import {
   SendTransactionReply,
   getNftInfo,
   NftRequestAnswer,
+  getTokenBalance,
 } from "@silvana-one/api";
 import { getChain } from "./chain";
 
@@ -245,6 +246,101 @@ export async function buildMintTransaction(
   };
 }
 
+export async function buildTransferTransaction(
+  params: NftMintTransactionParams
+): Promise<
+  | {
+      success: true;
+      tx: MintTransaction;
+    }
+  | {
+      success: false;
+      error: string;
+    }
+> {
+  const tx = (
+    await mintNft({
+      body: params,
+    })
+  ).data;
+  if (!tx) return { success: false, error: "Failed to build transaction" };
+  if (!tx.privateMetadata)
+    return { success: false, error: "Failed to get private metadata" };
+  if (!tx.storage) return { success: false, error: "Failed to get storage" };
+  if (!tx.metadataRoot)
+    return { success: false, error: "Failed to get metadata root" };
+
+  const collectionAddress = tx?.request?.collectionAddress;
+  if (!collectionAddress)
+    return { success: false, error: "Failed to get collection address" };
+  const collectionName = tx?.collectionName;
+  if (!collectionName)
+    return { success: false, error: "Failed to get collection name" };
+  const nftMintParams = (tx?.request as NftMintTransactionParams).nftMintParams;
+  const nftAddress = nftMintParams?.address;
+  if (!nftAddress) {
+    return { success: false, error: "Failed to get NFT address" };
+  }
+  const nftName = tx?.nftName;
+  if (!nftName) {
+    return { success: false, error: "Failed to get NFT name" };
+  }
+  if (!collectionAddress) {
+    return { success: false, error: "Failed to get collection address" };
+  }
+  if (!nftAddress) {
+    return { success: false, error: "Failed to get NFT address" };
+  }
+  console.log("NFT address:", nftAddress);
+  console.log("NFT collection address:", collectionAddress);
+  console.log("NFT collection name:", collectionName);
+  console.log("Storage address:", tx?.storage);
+  console.log("Metadata root:", tx?.metadataRoot);
+
+  const metadataFileName = `nft-${collectionAddress}-${nftAddress}-metadata.json`;
+  const privateMetadata = tx.privateMetadata;
+  // Remove private metadata from the transaction
+  tx.privateMetadata = undefined;
+
+  const keysFileName = `nft-${collectionAddress}-${nftAddress}-keys.json`;
+  const privateKeys = JSON.stringify(
+    {
+      nftName,
+      collectionName: tx?.collectionName,
+      collectionAddress,
+      nftAddress,
+      nftContractPrivateKey: nftMintParams?.addressPrivateKey,
+      storage: tx?.storage,
+      metadataRoot: tx?.metadataRoot,
+    },
+    null,
+    2
+  );
+  // Remove private keys from the request
+  if ((tx?.request as NftMintTransactionParams).nftMintParams) {
+    (tx?.request as NftMintTransactionParams).nftMintParams.addressPrivateKey =
+      undefined;
+  }
+
+  return {
+    success: true,
+    tx: {
+      mintType: "nft",
+      tx,
+      privateMetadata,
+      metadataFileName,
+      privateKeys,
+      keysFileName,
+      collectionName,
+      nftName,
+      nftAddress,
+      collectionAddress,
+      storage: tx.storage,
+      metadataRoot: tx.metadataRoot,
+    },
+  };
+}
+
 export async function proveTransaction(params: {
   tx: NftTransaction;
   signedData: string;
@@ -331,4 +427,28 @@ export async function sendTransaction(transaction: string): Promise<
   ).data;
   if (!reply) return { success: false, error: "Error sending transaction" };
   return { success: true, reply };
+}
+
+export async function balance(address: string): Promise<
+  | {
+      success: true;
+      balance: number | undefined;
+      hasAccount: boolean;
+    }
+  | {
+      success: false;
+      error?: string;
+    }
+> {
+  const reply = (
+    await getTokenBalance({
+      body: { address },
+    })
+  ).data;
+  if (!reply) return { success: false, error: "Error getting balance" };
+  return {
+    success: true,
+    balance: reply.balance,
+    hasAccount: reply.hasAccount ?? false,
+  };
 }

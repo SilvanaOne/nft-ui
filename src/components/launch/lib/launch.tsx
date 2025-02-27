@@ -19,7 +19,7 @@ import {
   TimelineGroupStatus,
   IsErrorFunction,
   GetMintStatisticsFunction,
-} from "../TimeLine";
+} from "@/components/timeline/TimeLine";
 import {
   messages,
   LineId,

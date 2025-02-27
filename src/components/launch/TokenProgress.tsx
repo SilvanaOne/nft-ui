@@ -1,7 +1,7 @@
 "use client";
 
 import { TokenPreview, TokenPreviewProps } from "./TokenPreview";
-import { TimeLine, TimeLineProps } from "./TimeLine";
+import { TimeLine, TimeLineProps } from "@/components/timeline/TimeLine";
 import { motion } from "framer-motion";
 import Image from "next/image";
 

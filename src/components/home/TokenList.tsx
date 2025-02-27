@@ -16,7 +16,7 @@ import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import NotAvailable from "@/components/pages/NotAvailable";
 import { log } from "@/lib/log";
 import { useTokenDetails } from "@/context/details";
-import { Order } from "@/components/orderbook/OrderBook";
+// import { Order } from "@/components/orderbook/OrderBook";
 import { getSiteType } from "@/lib/chain";
 import { CollectionInfo, NftInfo } from "@silvana-one/api";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
@@ -593,7 +593,7 @@ export default function TokenList({
                             <Highlight item={elm} attribute="name" />
                           </span>
                         </Link>
-
+                        {/* 
                         <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
                           {state.nfts?.[elm.collectionAddress]?.[
                             elm.tokenAddress
@@ -602,7 +602,7 @@ export default function TokenList({
                                 elm.tokenAddress
                               ]?.offer?.price.toString() + ` MINA`
                             : ""}
-                        </span>
+                        </span> */}
 
                         {/* <div className="dropup rounded-full hover:bg-jacarta-100 dark:hover:bg-jacarta-600">
                         <a

@@ -1,5 +1,5 @@
 "use client";
-import { TimeLineItem } from "@/components/launch/TimeLine";
+import { TimeLineItem } from "@/components/timeline/TimeLine";
 export type GroupId =
   | "verify"
   | "image"

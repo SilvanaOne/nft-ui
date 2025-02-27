@@ -14,6 +14,7 @@ export interface TokenActionFormProps {
   showAmount: boolean;
   showAddMore: boolean;
   showAddress: boolean;
+  showSalePrice: boolean;
 }
 
 export function TokenActionForm({
@@ -24,6 +25,7 @@ export function TokenActionForm({
   data,
   showAddress,
   showPrice,
+  showSalePrice,
   showAddMore,
   showAmount,
 }: TokenActionFormProps) {
@@ -32,7 +34,7 @@ export function TokenActionForm({
     e: React.ChangeEvent<HTMLInputElement>
   ) {
     const newAddresses = [...data.addresses];
-    newAddresses[index].address = e.target.value;
+    newAddresses[index] = e.target.value;
     onChange({ ...data, addresses: newAddresses });
 
     const isValid =
@@ -66,15 +68,14 @@ export function TokenActionForm({
             {title}
           </h5>
         )}
+        {showSalePrice && (
+          <h5 className="text-sm mb-4 text-jacarta-700 dark:text-white">
+            Sale Price : {data.salePrice ?? "Not on sale"}
+          </h5>
+        )}
         {showAddress && (
           <>
             <div className="relative my-3 flex items-center" key="title-mint">
-              <div className="w-1/4 flex justify-center">
-                <label className="mb-3 text-sm block font-display font-semibold text-jacarta-700 dark:text-white text-center">
-                  Amount
-                </label>
-              </div>
-
               <div className="w-3/4 flex justify-center">
                 <label className="mb-3 text-sm block font-display font-semibold text-jacarta-700 dark:text-white text-center">
                   Address
@@ -107,34 +108,12 @@ export function TokenActionForm({
                   </svg>
                 </button>
 
-                <div className="w-1/5">
-                  <input
-                    type="number"
-                    className="h-12 w-full border border-r-0 border-jacarta-100 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
-                    placeholder="amount"
-                    value={address.amount ?? ""}
-                    onChange={(e) => {
-                      onChange({
-                        ...data,
-                        addresses: data.addresses.map((item, i) =>
-                          i === index
-                            ? {
-                                ...item,
-                                amount: parseFloat(e.target.value) || 0,
-                              }
-                            : item
-                        ),
-                      });
-                    }}
-                  />
-                </div>
-
                 <div className="w-4/5">
                   <input
                     type="text"
                     className="h-12 w-full rounded-r-lg border border-jacarta-100 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                     placeholder="address (B62...)"
-                    value={address.address ?? ""}
+                    value={address ?? ""}
                     onChange={(e) => onChangeAddress(index, e)}
                   />
                 </div>
@@ -146,7 +125,7 @@ export function TokenActionForm({
                 onClick={() =>
                   onChange({
                     ...data,
-                    addresses: [...data.addresses, { amount: "", address: "" }],
+                    addresses: [...data.addresses, ""],
                   })
                 }
                 className="mt-2 rounded-full border-2 border-accent py-2 px-8 text-center text-sm font-semibold text-accent transition-all hover:bg-accent hover:text-white"

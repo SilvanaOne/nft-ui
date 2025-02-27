@@ -13,7 +13,7 @@ import {
   TimelineGroup,
   TimelineGroupStatus,
   TimelineItemStatus,
-} from "./TimeLine";
+} from "@/components/timeline/TimeLine";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
 import NotAvailable from "@/components/pages/NotAvailable";
 

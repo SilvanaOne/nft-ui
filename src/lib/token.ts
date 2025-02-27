@@ -2,9 +2,13 @@ import {
   NftTransactionParams,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
+  NftInfo,
+  CollectionInfo,
 } from "@silvana-one/api";
 
-export type TokenAction = "mint" | "transfer" | "offer" | "bid" | "orderbook";
+export type { NftInfo, CollectionInfo };
+
+export type TokenAction = "mint" | "transfer" | "sell" | "approve" | "buy";
 
 export interface MintAddress {
   amount: number | "" | undefined;

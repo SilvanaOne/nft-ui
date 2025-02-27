@@ -1,4 +1,5 @@
 "use client";
+import { NftStats } from "./NFTStats";
 import { useTokenDetails } from "@/context/details";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,8 +16,8 @@ import {
   getTransactionsByToken,
 } from "@/lib/blockberry-tokens";
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
-import { Order } from "@/components/orderbook/OrderBook";
-import { algoliaGetNFT } from "@/lib/search";
+// import { Order } from "@/components/orderbook/OrderBook";
+import { algoliaGetCollection, algoliaGetNFT } from "@/lib/search";
 import { getNFTInfo } from "@/lib/api";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
@@ -51,19 +52,21 @@ interface ItemDetailsProps {
   nftAddress: string;
 }
 
-export default function NFTDetails({
+export default function NftDetails({
   collectionAddress,
   nftAddress,
 }: ItemDetailsProps) {
   const { state, dispatch } = useTokenDetails();
   const tokenAddress = nftAddress;
-  const nftDetails = state.nfts?.[collectionAddress]?.[nftAddress] || {};
-  const item = nftDetails.info;
-  const bid = nftDetails.bid;
-  const offer = nftDetails.offer;
+  const nftInfo = state.nfts?.[collectionAddress]?.[nftAddress];
+
+  const collectionInfo = state.collections?.[collectionAddress];
+  const item = nftInfo?.info;
+  // const bid = nftInfo.bid;
+  // const offer = nftInfo.offer;
   const likes = state.likes[nftAddress] || 0;
   const like = state.favorites.includes(nftAddress);
-  const isPriceLoaded = nftDetails.isPriceLoaded;
+  const isPriceLoaded = nftInfo?.isPriceLoaded;
 
   // const setBid = (bid: Order) =>
   //   dispatch({ type: "SET_BID", payload: { tokenAddress, bid } });
@@ -116,6 +119,12 @@ export default function NFTDetails({
       payload: { collectionAddress, tokenAddress, info },
     });
 
+  const setCollection = (info: CollectionInfo) =>
+    dispatch({
+      type: "SET_COLLECTION_INFO",
+      payload: { collectionAddress, info },
+    });
+
   const setLikes = (
     likes: {
       collectionAddress: string;
@@ -127,7 +136,7 @@ export default function NFTDetails({
   const addFavorite = (tokenAddress: string) =>
     dispatch({ type: "ADD_FAVORITE", payload: { tokenAddress } });
 
-  const transactions = nftDetails.transactions || [];
+  const transactions = nftInfo?.transactions || [];
   const setTransactions = (transactions: BlockberryTokenTransaction[]) =>
     dispatch({
       type: "SET_NFT_TRANSACTIONS",
@@ -137,12 +146,10 @@ export default function NFTDetails({
   const { address, setAddress } = useContext(AddressContext);
 
   // useEffect(() => {
-  //   if (DEBUG) console.log("nftDetails", nftDetails);
+  //   if (DEBUG) console.log("nftInfo", nftInfo);
   // }, [state]);
 
   useEffect(() => {
-    if (DEBUG)
-      console.log("tokenAddress", { collectionAddress, tokenAddress, address });
     const fetchItem = async () => {
       if (tokenAddress && !item) {
         const item = await algoliaGetNFT({
@@ -164,6 +171,27 @@ export default function NFTDetails({
     };
     fetchItem();
   }, [tokenAddress]);
+
+  useEffect(() => {
+    const fetchCollection = async () => {
+      if (collectionAddress && !collectionInfo) {
+        const collection = await algoliaGetCollection({
+          collectionAddress,
+        });
+
+        if (collection) {
+          setCollection(collection);
+        } else {
+          const collectionInfo = await getNFTInfo({
+            collectionAddress,
+          });
+          if (collectionInfo.success && collectionInfo.info)
+            setCollection(collectionInfo.info.collection);
+        }
+      }
+    };
+    fetchCollection();
+  }, [collectionAddress]);
 
   useEffect(() => {
     if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
@@ -190,22 +218,6 @@ export default function NFTDetails({
     };
     fetchItem();
   }, [tokenAddress]);
-
-  // useEffect(() => {
-  //   if (DEBUG) console.log("tokenAddress", { tokenAddress, address });
-  //   const fetchItem = async () => {
-  //     if (tokenAddress && item && !tokenState) {
-  //       const tokenStateResult = await getTokenState({
-  //         tokenAddress,
-  //         info: item,
-  //       });
-
-  //       if (tokenStateResult?.success)
-  //         setTokenState(tokenStateResult.tokenState);
-  //     }
-  //   };
-  //   fetchItem();
-  // }, [tokenAddress, item]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -467,6 +479,45 @@ export default function NFTDetails({
               <p className="mb-5 dark:text-jacarta-300">
                 {item?.description ?? ""}
               </p>
+              {item?.collectionAddress && item?.collectionName && (
+                <>
+                  <p className="dark:text-jacarta-300">Collection:</p>
+                  <Link
+                    href={`/collection/${item?.collectionAddress}`}
+                    className="block mb-2 text-sm font-bold text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item?.collectionName}
+                  </Link>
+                </>
+              )}
+              {item?.tokenAddress && (
+                <>
+                  <p className="dark:text-jacarta-300">Address:</p>
+                  <Link
+                    href={`${explorerAccountUrl()}${item?.tokenAddress}`}
+                    className="block mb-2 text-sm font-bold text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item?.tokenAddress}
+                  </Link>
+                </>
+              )}
+              {item?.owner && (
+                <>
+                  <p className="dark:text-jacarta-300">Owner:</p>
+                  <Link
+                    href={`${explorerAccountUrl()}${item?.owner}`}
+                    className="block mb-2 text-sm font-bold text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {item?.owner}
+                  </Link>
+                </>
+              )}
 
               <p className="dark:text-jacarta-300">
                 {item?.tokenId ? "TokenId:" : "Address:"}
@@ -484,216 +535,8 @@ export default function NFTDetails({
                 {item?.tokenId ?? tokenAddress}
               </Link>
 
-              {/* Creator / Owner */}
-              {/* <div className="flex flex-wrap">
-                {isNotEmpty(item?.twitter) && (
-                  <div className="mr-8 mb-4 flex">
-                    <figure className="mr-4 shrink-0">
-                      <Link
-                        href={`https://twitter.com/${item?.twitter}`}
-                        className="relative block"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <Socials i={1} />
-
-                        <div
-                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                          data-tippy-content="Twitter"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="fill-white"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      </Link>
-                    </figure>
-                    <div className="flex flex-col justify-center">
-                      <span className="block text-sm text-jacarta-400 dark:text-white">
-                        <strong>Twitter:</strong>
-                      </span>
-                      <Link
-                        href={`https://twitter.com/${item?.twitter}`}
-                        className="block text-accent"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <span className="text-sm font-bold">
-                          @{item?.twitter ?? ""}
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-
-                {isNotEmpty(item?.discord) && (
-                  <div className="mb-4 flex">
-                    <figure className="mr-4 shrink-0">
-                      <Link href={`/user/4`} className="relative block">
-                        <Socials i={2} />
-                        <div
-                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                          data-tippy-content="Verified Collection"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="h-[.875rem] w-[.875rem] fill-white"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      </Link>
-                    </figure>
-                    <div className="flex flex-col justify-center">
-                      <span className="block text-sm text-jacarta-400 dark:text-white">
-                        Discord:
-                      </span>
-                      <Link href={`/user/6`} className="block text-accent">
-                        <span className="text-sm font-bold">
-                          {item?.discord ?? ""}
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-wrap">
-                {isNotEmpty(item?.website) && (
-                  <div className="mr-8 mb-4 flex">
-                    <figure className="mr-4 shrink-0">
-                      <Link
-                        href={`${item?.website}`}
-                        className="relative block"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <Socials i={5} />
-
-                        <div
-                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                          data-tippy-content="Twitter"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="fill-white"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      </Link>
-                    </figure>
-                    <div className="flex flex-col justify-center">
-                      <span className="block text-sm text-jacarta-400 dark:text-white">
-                        <strong>Website:</strong>
-                      </span>
-                      <Link
-                        href={`${item?.website}`}
-                        className="block text-accent"
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        <span className="text-sm font-bold">
-                          {item?.website ?? ""}
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap">
-                  {isNotEmpty(item?.instagram) && (
-                    <div className="mr-8 mb-4 flex">
-                      <figure className="mr-4 shrink-0">
-                        <Link
-                          href={`https://twitter.com/${item?.twitter}`}
-                          className="relative block"
-                        >
-                          <Socials i={3} />
-
-                          <div
-                            className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                            data-tippy-content="Twitter"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              width="24"
-                              height="24"
-                              className="fill-white"
-                            >
-                              <path fill="none" d="M0 0h24v24H0z"></path>
-                              <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                            </svg>
-                          </div>
-                        </Link>
-                      </figure>
-                      <div className="flex flex-col justify-center">
-                        <span className="block text-sm text-jacarta-400 dark:text-white">
-                          <strong>Instagram:</strong>
-                        </span>
-                        <Link href={`/user/2`} className="block text-accent">
-                          <span className="text-sm font-bold">
-                            @{item?.instagram ?? ""}
-                          </span>
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {isNotEmpty(item?.facebook) && (
-                  <div className="mb-4 flex">
-                    <figure className="mr-4 shrink-0">
-                      <Link href={`/user/4`} className="relative block">
-                        <Socials i={0} />
-                        <div
-                          className="absolute -right-3 top-[60%] flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-green dark:border-jacarta-600"
-                          data-tippy-content="Verified Collection"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="24"
-                            height="24"
-                            className="h-[.875rem] w-[.875rem] fill-white"
-                          >
-                            <path fill="none" d="M0 0h24v24H0z"></path>
-                            <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
-                          </svg>
-                        </div>
-                      </Link>
-                    </figure>
-                    <div className="flex flex-col justify-center">
-                      <span className="block text-sm text-jacarta-400 dark:text-white">
-                        Facebook:
-                      </span>
-                      <Link href={`/user/6`} className="block text-accent">
-                        <span className="text-sm font-bold">
-                          {item?.discord ?? ""}
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div> */}
-
               {/* Trade */}
-              {(bid || offer) && (
+              {/* {(bid || offer) && (
                 <div className="min-w-80 max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
                   <div className="mb-8 sm:flex sm:flex-wrap">
                     <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
@@ -762,12 +605,20 @@ export default function NFTDetails({
                     Trade
                   </button>
                 </div>
-              )}
+              )} */}
               {/* end bid */}
             </div>
             {/* end details */}
           </div>
-
+          {/* Tabs */}
+          <NftStats
+            transactions={transactions}
+            tokenAddress={tokenAddress}
+            collectionAddress={collectionAddress}
+            nftInfo={nftInfo?.info}
+            collectionInfo={collectionInfo?.info}
+            holders={[]}
+          />
           {/* end tabs */}
         </div>
       </section>

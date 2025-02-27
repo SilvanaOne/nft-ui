@@ -20,7 +20,7 @@ export const socials = [
     href:
       siteType === "token"
         ? "https://github.com/zkcloudworker"
-        : "https://github.com/dfstio",
+        : "https://github.com/SilvanaOne/silvana-lib/tree/main/packages/nft/src/contracts",
   },
 ];
 

@@ -8,8 +8,8 @@ import {
   updateTimelineItem,
   deleteTimelineGroup,
   TimelineItemStatus,
-} from "@/components/launch/TimeLine";
-import { TokenActionData, MintAddress, TokenAction } from "@/lib/token";
+} from "@/components/timeline/TimeLine";
+import { TokenActionData } from "@/lib/token";
 import { debug } from "@/lib/debug";
 const DEBUG = debug();
 import { log } from "@/lib/log";
@@ -19,19 +19,22 @@ type TokenAddress = string;
 
 export interface ActionTab {
   tokenAddress: TokenAddress;
+  collectionAddress: string;
   tab: TabId;
 }
 
 export interface TokenActionFormData {
-  addresses: MintAddress[];
+  addresses: string[];
   amount?: number;
   price?: number;
+  salePrice?: number;
 }
 
 export type TokenActionStatistics = { [key in TimelineItemStatus]: number };
 
 export interface TransactionTokenState extends ActionTab {
   tokenAddress: TokenAddress;
+  collectionAddress: string;
   tab: TabId;
   timelineItems: TimelineGroupDated[];
   formData: TokenActionFormData;
@@ -91,8 +94,10 @@ function calculateStatistics(timelineItems: TimelineGroup[] = []): {
 
 type TransactionStates = {
   transactionStates: {
-    [tokenAddress: TokenAddress]: {
-      [tab: TabId]: TransactionTokenState;
+    [collectionAddress: string]: {
+      [tokenAddress: TokenAddress]: {
+        [tab: TabId]: TransactionTokenState;
+      };
     };
   };
 };
@@ -135,9 +140,14 @@ export const createTransactionStore = (
       set((state) => ({
         transactionStates: {
           ...state.transactionStates,
-          [payload.tokenAddress]: {
-            ...state.transactionStates[payload.tokenAddress],
-            [payload.tab]: payload,
+          [payload.collectionAddress]: {
+            ...(state.transactionStates[payload.collectionAddress] ?? {}),
+            [payload.tokenAddress]: {
+              ...(state.transactionStates[payload.collectionAddress]?.[
+                payload.tokenAddress
+              ] ?? {}),
+              [payload.tab]: payload,
+            },
           },
         },
       })),
@@ -145,11 +155,18 @@ export const createTransactionStore = (
       set((state) => ({
         transactionStates: {
           ...state.transactionStates,
-          [payload.tokenAddress]: {
-            ...state.transactionStates[payload.tokenAddress],
-            [payload.tab]: {
-              ...state.transactionStates[payload.tokenAddress]?.[payload.tab],
-              formData: payload.formData,
+          [payload.collectionAddress]: {
+            ...(state.transactionStates[payload.collectionAddress] ?? {}),
+            [payload.tokenAddress]: {
+              ...(state.transactionStates[payload.collectionAddress]?.[
+                payload.tokenAddress
+              ] ?? {}),
+              [payload.tab]: {
+                ...(state.transactionStates[payload.collectionAddress]?.[
+                  payload.tokenAddress
+                ]?.[payload.tab] ?? {}),
+                formData: payload.formData,
+              },
             },
           },
         },
@@ -158,7 +175,9 @@ export const createTransactionStore = (
       set((state) => {
         const oldState = state.transactionStates;
         const currentItems =
-          oldState[payload.tokenAddress]?.[payload.tab]?.timelineItems || [];
+          oldState[payload.collectionAddress]?.[payload.tokenAddress]?.[
+            payload.tab
+          ]?.timelineItems || [];
         const updatedItems = addTimelineGroup({
           item: payload.timelineGroup,
           items: currentItems,
@@ -166,29 +185,37 @@ export const createTransactionStore = (
         const newState = {
           transactionStates: {
             ...state.transactionStates,
-            [payload.tokenAddress]: {
-              ...state.transactionStates[payload.tokenAddress],
-              [payload.tab]: {
-                ...state.transactionStates[payload.tokenAddress]?.[payload.tab],
-                timelineItems: updatedItems,
+            [payload.collectionAddress]: {
+              ...state.transactionStates[payload.collectionAddress],
+              [payload.tokenAddress]: {
+                ...state.transactionStates[payload.collectionAddress]?.[
+                  payload.tokenAddress
+                ],
+                [payload.tab]: {
+                  ...state.transactionStates[payload.collectionAddress]?.[
+                    payload.tokenAddress
+                  ]?.[payload.tab],
+                  timelineItems: updatedItems,
+                },
               },
             },
           },
         };
         const { statistics, isErrorNow } = calculateStatistics(updatedItems);
-        newState.transactionStates[payload.tokenAddress][
-          payload.tab
-        ].statistics = statistics;
-        newState.transactionStates[payload.tokenAddress][
-          payload.tab
-        ].isErrorNow = isErrorNow;
+        newState.transactionStates[payload.collectionAddress][
+          payload.tokenAddress
+        ][payload.tab].statistics = statistics;
+        newState.transactionStates[payload.collectionAddress][
+          payload.tokenAddress
+        ][payload.tab].isErrorNow = isErrorNow;
         return newState;
       }),
     updateTimelineGroup: (payload: UpdateTimelineGroupAction) =>
       set((state) => {
         const currentItems =
-          state.transactionStates[payload.tokenAddress]?.[payload.tab]
-            ?.timelineItems || [];
+          state.transactionStates[payload.collectionAddress]?.[
+            payload.tokenAddress
+          ]?.[payload.tab]?.timelineItems || [];
         const updatedItems = updateTimelineGroup({
           groupId: payload.groupId,
           update: payload.update,
@@ -197,11 +224,18 @@ export const createTransactionStore = (
         return {
           transactionStates: {
             ...state.transactionStates,
-            [payload.tokenAddress]: {
-              ...state.transactionStates[payload.tokenAddress],
-              [payload.tab]: {
-                ...state.transactionStates[payload.tokenAddress]?.[payload.tab],
-                timelineItems: updatedItems,
+            [payload.collectionAddress]: {
+              ...state.transactionStates[payload.collectionAddress],
+              [payload.tokenAddress]: {
+                ...state.transactionStates[payload.collectionAddress]?.[
+                  payload.tokenAddress
+                ],
+                [payload.tab]: {
+                  ...state.transactionStates[payload.collectionAddress]?.[
+                    payload.tokenAddress
+                  ]?.[payload.tab],
+                  timelineItems: updatedItems,
+                },
               },
             },
           },
@@ -210,8 +244,9 @@ export const createTransactionStore = (
     updateTimelineItem: (payload: UpdateTimelineItemAction) =>
       set((state) => {
         const currentItems =
-          state.transactionStates[payload.tokenAddress]?.[payload.tab]
-            ?.timelineItems || [];
+          state.transactionStates[payload.collectionAddress]?.[
+            payload.tokenAddress
+          ]?.[payload.tab]?.timelineItems || [];
         const updatedItems = updateTimelineItem({
           items: currentItems,
           groupId: payload.groupId,
@@ -220,29 +255,37 @@ export const createTransactionStore = (
         const newState = {
           transactionStates: {
             ...state.transactionStates,
-            [payload.tokenAddress]: {
-              ...state.transactionStates[payload.tokenAddress],
-              [payload.tab]: {
-                ...state.transactionStates[payload.tokenAddress]?.[payload.tab],
-                timelineItems: updatedItems,
+            [payload.collectionAddress]: {
+              ...(state.transactionStates[payload.collectionAddress] ?? {}),
+              [payload.tokenAddress]: {
+                ...(state.transactionStates[payload.collectionAddress]?.[
+                  payload.tokenAddress
+                ] ?? {}),
+                [payload.tab]: {
+                  ...state.transactionStates[payload.collectionAddress]?.[
+                    payload.tokenAddress
+                  ]?.[payload.tab],
+                  timelineItems: updatedItems,
+                },
               },
             },
           },
         };
         const { statistics, isErrorNow } = calculateStatistics(updatedItems);
-        newState.transactionStates[payload.tokenAddress][
-          payload.tab
-        ].statistics = statistics;
-        newState.transactionStates[payload.tokenAddress][
-          payload.tab
-        ].isErrorNow = isErrorNow;
+        newState.transactionStates[payload.collectionAddress][
+          payload.tokenAddress
+        ][payload.tab].statistics = statistics;
+        newState.transactionStates[payload.collectionAddress][
+          payload.tokenAddress
+        ][payload.tab].isErrorNow = isErrorNow;
         return newState;
       }),
     deleteTimelineGroup: (payload: DeleteTimelineGroupAction) =>
       set((state) => {
         const currentItems =
-          state.transactionStates[payload.tokenAddress]?.[payload.tab]
-            ?.timelineItems || [];
+          state.transactionStates[payload.collectionAddress]?.[
+            payload.tokenAddress
+          ]?.[payload.tab]?.timelineItems || [];
         const updatedItems = deleteTimelineGroup({
           groupId: payload.groupId,
           items: currentItems,
@@ -250,33 +293,47 @@ export const createTransactionStore = (
         const newState = {
           transactionStates: {
             ...state.transactionStates,
-            [payload.tokenAddress]: {
-              ...state.transactionStates[payload.tokenAddress],
-              [payload.tab]: {
-                ...state.transactionStates[payload.tokenAddress]?.[payload.tab],
-                timelineItems: updatedItems,
+            [payload.collectionAddress]: {
+              ...(state.transactionStates[payload.collectionAddress] ?? {}),
+              [payload.tokenAddress]: {
+                ...(state.transactionStates[payload.collectionAddress]?.[
+                  payload.tokenAddress
+                ] ?? {}),
+                [payload.tab]: {
+                  ...(state.transactionStates[payload.collectionAddress]?.[
+                    payload.tokenAddress
+                  ]?.[payload.tab] ?? {}),
+                  timelineItems: updatedItems,
+                },
               },
             },
           },
         };
         const { statistics, isErrorNow } = calculateStatistics(updatedItems);
-        newState.transactionStates[payload.tokenAddress][
-          payload.tab
-        ].statistics = statistics;
-        newState.transactionStates[payload.tokenAddress][
-          payload.tab
-        ].isErrorNow = isErrorNow;
+        newState.transactionStates[payload.collectionAddress][
+          payload.tokenAddress
+        ][payload.tab].statistics = statistics;
+        newState.transactionStates[payload.collectionAddress][
+          payload.tokenAddress
+        ][payload.tab].isErrorNow = isErrorNow;
         return newState;
       }),
     setIsProcessing: (payload: SetProcessingAction) =>
       set((state) => ({
         transactionStates: {
           ...state.transactionStates,
-          [payload.tokenAddress]: {
-            ...state.transactionStates[payload.tokenAddress],
-            [payload.tab]: {
-              ...state.transactionStates[payload.tokenAddress]?.[payload.tab],
-              isProcessing: payload.isProcessing,
+          [payload.collectionAddress]: {
+            ...(state.transactionStates[payload.collectionAddress] ?? {}),
+            [payload.tokenAddress]: {
+              ...(state.transactionStates[payload.collectionAddress]?.[
+                payload.tokenAddress
+              ] ?? {}),
+              [payload.tab]: {
+                ...state.transactionStates[payload.collectionAddress]?.[
+                  payload.tokenAddress
+                ]?.[payload.tab],
+                isProcessing: payload.isProcessing,
+              },
             },
           },
         },

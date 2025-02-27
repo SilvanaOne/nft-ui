@@ -16,7 +16,7 @@ import {
   getTransactionsByToken,
 } from "@/lib/blockberry-tokens";
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
-import { Order } from "@/components/orderbook/OrderBook";
+// import { Order } from "@/components/orderbook/OrderBook";
 import Banner from "./Banner";
 import Profile from "./Profile";
 import Collection from "./Collection";

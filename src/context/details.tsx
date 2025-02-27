@@ -3,7 +3,7 @@
 import React, { createContext, useReducer, useContext, ReactNode } from "react";
 import { TokenAction } from "@/lib/token";
 import { NftInfo, CollectionInfo } from "@silvana-one/api";
-import { Order } from "@/components/orderbook/OrderBook";
+// import { Order } from "@/components/orderbook/OrderBook";
 import {
   BlockberryTokenTransaction,
   BlockberryTokenHolder,
@@ -13,8 +13,8 @@ interface NFTDetailsState {
   info: NftInfo | undefined;
   transactions: BlockberryTokenTransaction[];
   action: TokenAction | undefined;
-  bid: Order | undefined;
-  offer: Order | undefined;
+  // bid: Order | undefined;
+  // offer: Order | undefined;
   isPriceLoaded: boolean;
   likes: number;
   like: boolean;
@@ -102,30 +102,30 @@ type Action =
       type: "SET_COLLECTION_ACTION";
       payload: { collectionAddress: string; action: TokenAction | undefined };
     }
-  | {
-      type: "SET_NFT_BID";
-      payload: {
-        collectionAddress: string;
-        tokenAddress: string;
-        bid: Order | undefined;
-      };
-    }
-  | {
-      type: "SET_COLLECTION_BID";
-      payload: { collectionAddress: string; bid: Order | undefined };
-    }
-  | {
-      type: "SET_NFT_OFFER";
-      payload: {
-        collectionAddress: string;
-        tokenAddress: string;
-        offer: Order | undefined;
-      };
-    }
-  | {
-      type: "SET_COLLECTION_OFFER";
-      payload: { collectionAddress: string; offer: Order | undefined };
-    }
+  // | {
+  //     type: "SET_NFT_BID";
+  //     payload: {
+  //       collectionAddress: string;
+  //       tokenAddress: string;
+  //       bid: Order | undefined;
+  //     };
+  //   }
+  // | {
+  //     type: "SET_COLLECTION_BID";
+  //     payload: { collectionAddress: string; bid: Order | undefined };
+  //   }
+  // | {
+  //     type: "SET_NFT_OFFER";
+  //     payload: {
+  //       collectionAddress: string;
+  //       tokenAddress: string;
+  //       offer: Order | undefined;
+  //     };
+  //   }
+  // | {
+  //     type: "SET_COLLECTION_OFFER";
+  //     payload: { collectionAddress: string; offer: Order | undefined };
+  //   }
   | {
       type: "SET_ITEMS";
       payload: { items: NftInfo[] };
@@ -259,22 +259,22 @@ const tokenDetailsReducer = (
           },
         },
       };
-    case "SET_NFT_BID":
-      return {
-        ...state,
-        nfts: {
-          ...state.nfts,
-          [action.payload.collectionAddress]: {
-            ...state.nfts[action.payload.collectionAddress],
-            [action.payload.tokenAddress]: {
-              ...state.nfts[action.payload.collectionAddress][
-                action.payload.tokenAddress
-              ],
-              bid: action.payload.bid,
-            },
-          },
-        },
-      };
+    // case "SET_NFT_BID":
+    //   return {
+    //     ...state,
+    //     nfts: {
+    //       ...state.nfts,
+    //       [action.payload.collectionAddress]: {
+    //         ...state.nfts[action.payload.collectionAddress],
+    //         [action.payload.tokenAddress]: {
+    //           ...state.nfts[action.payload.collectionAddress][
+    //             action.payload.tokenAddress
+    //           ],
+    //           bid: action.payload.bid,
+    //         },
+    //       },
+    //     },
+    //   };
 
     case "SET_FAVORITES":
       return {
