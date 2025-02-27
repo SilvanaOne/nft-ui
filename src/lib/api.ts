@@ -9,7 +9,11 @@ import {
   prove,
   getProof,
   JobResults,
-  NftMintTransactionParams,
+  NftMintParams,
+  NftTransferTransactionParams,
+  NftApproveTransactionParams,
+  NftSellTransactionParams,
+  NftBuyTransactionParams,
   txStatus,
   TransactionStatus,
   sendTransaction as sendTransactionApi,
@@ -17,6 +21,11 @@ import {
   getNftInfo,
   NftRequestAnswer,
   getTokenBalance,
+  transferNft,
+  approveNft,
+  sellNft,
+  buyNft,
+  NftMintTransactionParams,
 } from "@silvana-one/api";
 import { getChain } from "./chain";
 
@@ -246,23 +255,61 @@ export async function buildMintTransaction(
   };
 }
 
-export async function buildTransferTransaction(
-  params: NftMintTransactionParams
+export interface BuiltNftTransaction {
+  tx: NftTransaction;
+  collectionAddress: string;
+  collectionName: string;
+  privateMetadata?: string;
+  metadataFileName?: string;
+  privateKeys?: string;
+  keysFileName?: string;
+  storage: string;
+  metadataRoot: string;
+  nftName: string;
+  nftAddress: string;
+}
+
+export async function buildTransaction(
+  params:
+    | NftTransferTransactionParams
+    | NftApproveTransactionParams
+    | NftSellTransactionParams
+    | NftBuyTransactionParams
 ): Promise<
   | {
       success: true;
-      tx: MintTransaction;
+      tx: BuiltNftTransaction;
     }
   | {
       success: false;
       error: string;
     }
 > {
-  const tx = (
-    await mintNft({
-      body: params,
-    })
-  ).data;
+  const tx =
+    params.txType === "nft:transfer"
+      ? (
+          await transferNft({
+            body: params,
+          })
+        ).data
+      : // : params.txType === "nft:approve" ? (
+      //   await approveNft({
+      //     body: params,
+      //   })
+      // ).data
+      params.txType === "nft:sell"
+      ? (
+          await sellNft({
+            body: params,
+          })
+        ).data
+      : params.txType === "nft:buy"
+      ? (
+          await buyNft({
+            body: params,
+          })
+        ).data
+      : undefined;
   if (!tx) return { success: false, error: "Failed to build transaction" };
   if (!tx.privateMetadata)
     return { success: false, error: "Failed to get private metadata" };
@@ -325,7 +372,6 @@ export async function buildTransferTransaction(
   return {
     success: true,
     tx: {
-      mintType: "nft",
       tx,
       privateMetadata,
       metadataFileName,

@@ -1,17 +1,24 @@
 "use client";
 import { TokenActionForm } from "@/components/nft/NFTActionForm";
 import {
-  MintAddress,
   TokenAction,
   TokenActionData,
   TokenActionTransactionParams,
 } from "@/lib/token";
-import { NftInfo, CollectionInfo } from "@silvana-one/api";
+import {
+  NftInfo,
+  CollectionInfo,
+  NftTransferTransactionParams,
+  NftApproveTransactionParams,
+  NftSellTransactionParams,
+  NftBuyTransactionParams,
+} from "@silvana-one/api";
 import { TransactionTokenState, TokenActionFormData } from "@/context/action";
 import { TimeLine } from "@/components/timeline/TimeLine";
 import { debug } from "@/lib/debug";
 import { useTransactionStore } from "@/context/tx-provider";
-import { NftMintTransactionParams } from "@silvana-one/api";
+import { tokenAction } from "./lib/action";
+
 // import { OrderbookTab } from "./Orderbook";
 
 const DEBUG = debug();
@@ -23,124 +30,71 @@ const DEBUG = debug();
 //   },
 // ];
 
-// function initialTokenActionData(params: {
-//   tokenState: TokenState;
-//   tab: TokenAction;
-//   formData: TokenActionFormData;
-// }): TokenActionData {
-//   const { tokenState, tab, formData } = params;
-//   const txs: TokenActionTransactionParams[] = [];
+function initialTokenActionData(params: {
+  nftInfo: NftInfo;
+  tab: TokenAction;
+  formData: TokenActionFormData;
+}): TokenActionData {
+  const { nftInfo, tab, formData } = params;
+  const txs: TokenActionTransactionParams[] = [];
 
-//   switch (tab) {
-//     case "mint":
-//       txs.push(
-//         ...formData.addresses.map(
-//           (address) =>
-//             ({
-//               tokenAddress: tokenState.tokenAddress,
-//               sender: tokenState.adminAddress,
-//               txType: "token:mint",
-//               to: address.address,
-//               amount: Math.round(
-//                 (address.amount ? Number(address.amount) : 0) * 1_000_000_000
-//               ),
-//               price: tokenState.mintPrice
-//                 ? Math.round(Number(tokenState.mintPrice) * 1_000_000_000)
-//                 : undefined,
-//             } as TokenMintTransactionParams)
-//         )
-//       );
-//       break;
+  switch (tab) {
+    case "transfer":
+      txs.push({
+        nftAddress: nftInfo.tokenAddress,
+        collectionAddress: nftInfo.collectionAddress,
+        sender: nftInfo.owner,
+        txType: "nft:transfer",
+        nftTransferParams: {
+          to: formData.addresses[0],
+        },
+      } as NftTransferTransactionParams);
+      break;
 
-//     case "redeem":
-//       txs.push({
-//         tokenAddress: tokenState.tokenAddress,
-//         sender: tokenState.adminAddress,
-//         txType: "token:redeem",
-//         amount: Math.round(
-//           (formData.amount ? Number(formData.amount) : 0) * 1_000_000_000
-//         ),
-//         price: tokenState.redeemPrice
-//           ? Math.round(Number(tokenState.redeemPrice) * 1_000_000_000)
-//           : undefined,
-//       } as TokenRedeemTransactionParams);
-//       break;
+    case "approve":
+      txs.push({
+        nftAddress: nftInfo.tokenAddress,
+        collectionAddress: nftInfo.collectionAddress,
+        sender: nftInfo.owner,
+        txType: "nft:approve",
+        nftApproveParams: {
+          to: formData.addresses[0],
+        },
+      } as NftApproveTransactionParams);
+      break;
 
-//     case "burn":
-//       txs.push({
-//         tokenAddress: tokenState.tokenAddress,
-//         sender: tokenState.adminAddress,
-//         txType: "token:burn",
-//         amount: Math.round(
-//           (formData.amount ? Number(formData.amount) : 0) * 1_000_000_000
-//         ),
-//       } as TokenBurnTransactionParams);
-//       break;
-//     case "transfer":
-//       txs.push(
-//         ...formData.addresses.map(
-//           (address) =>
-//             ({
-//               tokenAddress: tokenState.tokenAddress,
-//               sender: tokenState.adminAddress,
-//               txType: "token:transfer",
-//               to: address.address,
-//               amount: Math.round(
-//                 (address.amount ? Number(address.amount) : 0) * 1_000_000_000
-//               ),
-//             } as TokenTransferTransactionParams)
-//         )
-//       );
-//       break;
-//     case "airdrop":
-//       txs.push({
-//         tokenAddress: tokenState.tokenAddress,
-//         sender: tokenState.adminAddress,
-//         txType: "token:airdrop",
-//         recipients: formData.addresses.map((address) => ({
-//           address: address.address,
-//           amount: Math.round(
-//             (address.amount ? Number(address.amount) : 0) * 1_000_000_000
-//           ),
-//         })),
-//       } as TokenAirdropTransactionParams);
-//       break;
-//     case "offer":
-//       txs.push({
-//         tokenAddress: tokenState.tokenAddress,
-//         sender: tokenState.adminAddress,
-//         txType: "token:offer:create",
-//         amount: Math.round(
-//           formData.amount ? Number(formData.amount) * 1_000_000_000 : 0
-//         ),
-//         price: Math.round(
-//           formData.price
-//             ? Number(formData.price) * 1_000_000_000
-//             : 1_000_000_000
-//         ),
-//       } as TokenOfferTransactionParams);
-//       break;
-//     case "bid":
-//       txs.push({
-//         tokenAddress: tokenState.tokenAddress,
-//         sender: tokenState.adminAddress,
-//         txType: "token:bid:create",
-//         amount: Math.round(
-//           formData.amount ? Number(formData.amount) * 1_000_000_000 : 0
-//         ),
-//         price: Math.round(
-//           formData.price
-//             ? Number(formData.price) * 1_000_000_000
-//             : 1_000_000_000
-//         ),
-//       } as TokenBidTransactionParams);
-//       break;
-//   }
-//   return {
-//     symbol: tokenState.tokenSymbol,
-//     txs,
-//   };
-// }
+    case "sell":
+      txs.push({
+        nftAddress: nftInfo.tokenAddress,
+        collectionAddress: nftInfo.collectionAddress,
+        sender: nftInfo.owner,
+        txType: "nft:sell",
+        nftSellParams: {
+          price: formData.salePrice,
+        },
+      } as NftSellTransactionParams);
+      break;
+
+    case "buy":
+      txs.push({
+        nftAddress: nftInfo.tokenAddress,
+        collectionAddress: nftInfo.collectionAddress,
+        sender: nftInfo.owner,
+        txType: "nft:buy",
+        nftBuyParams: {
+          buyer: undefined,
+        },
+      } as NftBuyTransactionParams);
+      break;
+  }
+  return {
+    nftName: nftInfo.name,
+    collectionName: nftInfo.collectionName,
+    nftAddress: nftInfo.tokenAddress,
+    collectionAddress: nftInfo.collectionAddress,
+    txs,
+  };
+}
 export type NftActionProps = {
   tokenAddress: string;
   collectionAddress: string;
@@ -197,32 +151,34 @@ export function NftActionComponent({
   async function onSubmit(formData: TokenActionFormData) {
     if (DEBUG) console.log("Processing form", formData);
     if (!nftInfo) return;
-    // const tokenData = initialTokenActionData({
-    //   nftInfo,
-    //   collectionInfo,
-    //   tab,
-    //   formData,
-    // });
-    // setTokenData({
-    //   tokenAddress,
-    //   tab,
-    //   tokenData,
-    //   timelineItems: [],
-    //   formData,
-    //   isProcessing: true,
-    //   statistics: {
-    //     success: 0,
-    //     error: 0,
-    //     waiting: 0,
-    //   },
-    //   isErrorNow: false,
-    // });
-    // tokenAction({
-    //   tokenState,
-    //   tokenData,
-    //   tab,
-    //   onBalanceUpdate,
-    // });
+    const tokenData = initialTokenActionData({
+      nftInfo,
+      tab,
+      formData,
+    });
+
+    setTokenData({
+      tokenAddress,
+      collectionAddress,
+      tab,
+      tokenData,
+      timelineItems: [],
+      formData,
+      isProcessing: true,
+      statistics: {
+        success: 0,
+        error: 0,
+        waiting: 0,
+      },
+      isErrorNow: false,
+    });
+    tokenAction({
+      nftInfo,
+      collectionInfo,
+      tokenData,
+      tab,
+      onBalanceUpdate,
+    });
   }
 
   async function onSubmitOrder(tokenData: TokenActionData) {

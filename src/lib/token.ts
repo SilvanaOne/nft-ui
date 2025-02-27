@@ -2,8 +2,13 @@ import {
   NftTransactionParams,
   LaunchTokenStandardAdminParams,
   LaunchTokenAdvancedAdminParams,
+  NftTransferTransactionParams,
+  NftApproveTransactionParams,
+  NftSellTransactionParams,
+  NftBuyTransactionParams,
   NftInfo,
   CollectionInfo,
+  NftMintTransactionParams,
 } from "@silvana-one/api";
 
 export type { NftInfo, CollectionInfo };
@@ -132,13 +137,17 @@ export interface LaunchCollectionData {
   collectionPermissions?: CollectionPermissions;
 }
 
-export type TokenActionTransactionParams = Exclude<
-  NftTransactionParams,
-  LaunchTokenStandardAdminParams | LaunchTokenAdvancedAdminParams
->;
+export type TokenActionTransactionParams =
+  | NftTransferTransactionParams
+  | NftApproveTransactionParams
+  | NftSellTransactionParams
+  | NftBuyTransactionParams;
 
 export interface TokenActionData {
-  symbol: string;
+  nftName: string;
+  collectionName: string;
+  nftAddress: string;
+  collectionAddress: string;
   txs: TokenActionTransactionParams[];
 }
 
