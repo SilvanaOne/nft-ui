@@ -423,7 +423,7 @@ export async function waitForMinaTx(params: {
     groupId,
     update: {
       lineId: "minted",
-      content: "Minted",
+      content: "Successfully processed transaction",
       status: "success",
     },
   });

@@ -15,6 +15,7 @@ export interface TokenActionFormProps {
   showAddMore: boolean;
   showAddress: boolean;
   showSalePrice: boolean;
+  price?: number;
 }
 
 export function TokenActionForm({
@@ -28,6 +29,7 @@ export function TokenActionForm({
   showSalePrice,
   showAddMore,
   showAmount,
+  price,
 }: TokenActionFormProps) {
   async function onChangeAddress(
     index: number,
@@ -70,7 +72,8 @@ export function TokenActionForm({
         )}
         {showSalePrice && (
           <h5 className="text-sm mb-4 text-jacarta-700 dark:text-white">
-            Sale Price : {data.salePrice ?? "Not on sale"}
+            Sale Price :{" "}
+            {data.price ? price?.toString() + " MINA" : "Not on sale"}
           </h5>
         )}
         {showAddress && (
@@ -166,11 +169,11 @@ export function TokenActionForm({
                   type="number"
                   className="w-full rounded-lg border border-jacarta-100 py-3 px-3 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                   placeholder="Enter price"
-                  value={data.price ?? ""}
+                  value={data.salePrice ?? ""}
                   onChange={(e) =>
                     onChange({
                       ...data,
-                      price: parseFloat(e.target.value) || 0,
+                      salePrice: parseFloat(e.target.value) || 0,
                     })
                   }
                 />

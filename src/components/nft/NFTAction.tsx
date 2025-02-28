@@ -64,6 +64,7 @@ function initialTokenActionData(params: {
       break;
 
     case "sell":
+      console.log("sell", formData.salePrice);
       txs.push({
         nftAddress: nftInfo.tokenAddress,
         collectionAddress: nftInfo.collectionAddress,
@@ -235,6 +236,7 @@ export function NftActionComponent({
             showAddMore={false}
             showAddress={tab === "transfer" || tab === "approve"}
             showSalePrice={tab === "buy"}
+            price={nftInfo?.price}
           />
         </div>
       )}
