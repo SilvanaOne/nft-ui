@@ -57,6 +57,7 @@ export default function NftDetails({
   nftAddress,
 }: ItemDetailsProps) {
   const { state, dispatch } = useTokenDetails();
+  const [itemFetched, setItemFetched] = useState(false);
   const tokenAddress = nftAddress;
   const nftInfo = state.nfts?.[collectionAddress]?.[nftAddress];
 
@@ -171,6 +172,19 @@ export default function NftDetails({
     };
     fetchItem();
   }, [tokenAddress]);
+
+  useEffect(() => {
+    if (itemFetched) return;
+    const fetchItem = async () => {
+      const nftInfo = await getNFTInfo({
+        collectionAddress,
+        nftAddress: tokenAddress,
+      });
+      if (nftInfo.success && nftInfo.info) setItem(nftInfo.info.nft);
+      setItemFetched(true);
+    };
+    fetchItem();
+  }, [item]);
 
   useEffect(() => {
     const fetchCollection = async () => {

@@ -40,13 +40,13 @@ export async function buildNftTransaction(params: {
       success: true;
       jobId: string;
       collectionAddress: string;
-      nftAddress: string;
+      nftAddress?: string;
       privateMetadata?: string;
       metadataFileName?: string;
       privateKeys?: string;
       keysFileName?: string;
-      storage: string;
-      metadataRoot: string;
+      storage?: string;
+      metadataRoot?: string;
     }
 > {
   const { data, sender, updateTimelineItem, groupId } = params;
@@ -73,6 +73,9 @@ export async function buildNftTransaction(params: {
 
     const txParams = data;
     txParams.sender = sender;
+    if ("nftTransferParams" in txParams && !txParams.nftTransferParams.from) {
+      txParams.nftTransferParams.from = sender;
+    }
 
     const txReply = await buildTransaction(txParams);
     if (!txReply.success) {
@@ -226,7 +229,6 @@ export async function buildNftTransaction(params: {
       keysFileName: reply.keysFileName,
       storage: reply.storage,
       metadataRoot: reply.metadataRoot,
-      nftAddress: reply.nftAddress,
     };
   } catch (error: any) {
     console.error("Error in deployToken", error);
