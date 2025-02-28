@@ -145,7 +145,18 @@ export default function TokenList({
     const filteredByMasterNFT = filteredByCollection.filter(
       (item) => item.tokenAddress !== item.collectionAddress
     );
-    setItemsToDisplay(filteredByMasterNFT);
+    // Sort NFTs - ones with price first, then by update time
+    const sortedByPriceAndTime = filteredByMasterNFT.sort((a, b) => {
+      // First compare by price existence
+      if (a.price && !b.price) return -1;
+      if (!a.price && b.price) return 1;
+
+      // If both have price or both don't have price, sort by update time
+      const aTime = a.updated || a.created || 0;
+      const bTime = b.updated || b.created || 0;
+      return bTime - aTime; // Most recent first
+    });
+    setItemsToDisplay(sortedByPriceAndTime);
   }, [categories, state.list, state.favorites, numberOfItems]);
 
   // const setItem = (info: DeployedTokenInfo) =>
@@ -586,23 +597,17 @@ export default function TokenList({
                       </figure>
                       <div className="mt-7 flex items-center justify-between">
                         <Link
-                          href={`/nft/${elm.tokenAddress}`}
+                          href={`/nft/${elm.collectionAddress}/${elm.tokenAddress}`}
                           className="flex"
                         >
                           <span className="font-display text-base text-jacarta-700 hover:text-accent dark:text-white  float-left">
                             <Highlight item={elm} attribute="name" />
                           </span>
                         </Link>
-                        {/* 
+
                         <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                          {state.nfts?.[elm.collectionAddress]?.[
-                            elm.tokenAddress
-                          ]?.offer?.price
-                            ? state.nfts?.[elm.collectionAddress]?.[
-                                elm.tokenAddress
-                              ]?.offer?.price.toString() + ` MINA`
-                            : ""}
-                        </span> */}
+                          {elm.price ? elm.price.toString() + ` MINA` : ""}
+                        </span>
 
                         {/* <div className="dropup rounded-full hover:bg-jacarta-100 dark:hover:bg-jacarta-600">
                         <a

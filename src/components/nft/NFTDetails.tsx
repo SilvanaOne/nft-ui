@@ -550,10 +550,10 @@ export default function NftDetails({
               </Link>
 
               {/* Trade */}
-              {/* {(bid || offer) && (
-                <div className="min-w-80 max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
+              {item?.price && (
+                <div className="min-w-40 max-w-md rounded-2lg border border-jacarta-100 bg-white p-8 dark:border-jacarta-600 dark:bg-jacarta-700">
                   <div className="mb-8 sm:flex sm:flex-wrap">
-                    <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
+                    {/* <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
                       <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
                         <span className="text-medium text-jacarta-400 dark:text-jacarta-300">
                           Highest bid
@@ -568,18 +568,18 @@ export default function NftDetails({
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </div> */}
                     <div className="sm:w-1/2 sm:pr-4 lg:pr-8">
                       <div className="block overflow-hidden text-ellipsis whitespace-nowrap">
                         <span className="text-medium text-jacarta-400 dark:text-jacarta-300">
-                          Lowest offer
+                          Price
                         </span>
                       </div>
                       <div className="mt-3 flex">
                         <div>
                           <div className="flex items-center whitespace-nowrap">
-                            <span className="text-lg font-medium leading-tight tracking-tight text-red">
-                              {formatBalance(offer?.price)} MINA
+                            <span className="text-lg font-medium leading-tight tracking-tight text-green">
+                              {formatBalance(item?.price)} MINA
                             </span>
                           </div>
                         </div>
@@ -589,8 +589,8 @@ export default function NftDetails({
 
                   <button
                     onClick={() => {
-                      const tradeTab = document.getElementById("trade-tab");
-                      const tradePane = document.getElementById("trade");
+                      const tradeTab = document.getElementById("actions-tab");
+                      const tradePane = document.getElementById("actions");
                       if (tradeTab && tradePane) {
                         // Remove active class from all tabs and panes
                         document
@@ -616,10 +616,10 @@ export default function NftDetails({
                     }}
                     className="inline-block w-full rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
                   >
-                    Trade
+                    Buy
                   </button>
                 </div>
-              )} */}
+              )}
               {/* end bid */}
             </div>
             {/* end details */}

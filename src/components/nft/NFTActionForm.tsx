@@ -72,8 +72,7 @@ export function TokenActionForm({
         )}
         {showSalePrice && (
           <h5 className="text-sm mb-4 text-jacarta-700 dark:text-white">
-            Sale Price :{" "}
-            {data.price ? price?.toString() + " MINA" : "Not on sale"}
+            Sale Price : {price ? price?.toString() + " MINA" : "Not on sale"}
           </h5>
         )}
         {showAddress && (
