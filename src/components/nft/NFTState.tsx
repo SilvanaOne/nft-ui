@@ -74,6 +74,12 @@ export function NftStateTab({
       : tab === "master"
       ? collectionInfo?.masterNFT
       : undefined;
+  const nft =
+    tab === "nft"
+      ? nftInfo
+      : tab === "master"
+      ? collectionInfo?.masterNFT
+      : undefined;
   const contractAddress =
     tab === "nft"
       ? nftInfo?.tokenAddress
@@ -409,20 +415,42 @@ export function NftStateTab({
                   : collectionInfo?.masterNFT?.owner || ""}
               </Link>
             </div>
-            {/* <div className="mb-2 flex items-center">
-            <span className="mr-2 min-w-[14rem] dark:text-jacarta-300">
-              Owner Token Balance:
-            </span>
-            <span className="text-jacarta-700 dark:text-white">
-              {(nftState.adminTokenBalance / 1_000_000_000).toLocaleString(
-                undefined,
-                {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 9,
-                }
+            <div className="mb-2 mt-2 flex items-center">
+              <span className="mr-2 min-w-[14rem] dark:text-jacarta-300">
+                Approved Address:
+              </span>
+              {nft?.approved && (
+                <Link
+                  href={`${explorerAccountUrl()}${nft?.approved}`}
+                  className=" text-accent hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {nft?.approved}
+                </Link>
               )}
-            </span>
-          </div> */}
+              {!nft?.approved && (
+                <span className="text-jacarta-700 dark:text-white">
+                  No approved address
+                </span>
+              )}
+            </div>
+            <div className="mb-2 flex items-center">
+              <span className="mr-2 min-w-[14rem] dark:text-jacarta-300">
+                Approved type:
+              </span>
+              <span className="text-jacarta-700 dark:text-white">
+                {nft?.approvedType ?? "N/A"}
+              </span>
+            </div>
+            <div className="mb-2 flex items-center">
+              <span className="mr-2 min-w-[14rem] dark:text-jacarta-300">
+                Price:
+              </span>
+              <span className="text-jacarta-700 dark:text-white">
+                {nft?.price ?? "N/A"}
+              </span>
+            </div>
           </>
         )}
         {tab === "collection" && (

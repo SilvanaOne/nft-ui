@@ -18,6 +18,8 @@ import { TimeLine } from "@/components/timeline/TimeLine";
 import { debug } from "@/lib/debug";
 import { useTransactionStore } from "@/context/tx-provider";
 import { tokenAction } from "./lib/action";
+import { AddressContext } from "@/context/address";
+import { useContext } from "react";
 
 // import { OrderbookTab } from "./Orderbook";
 
@@ -34,8 +36,9 @@ function initialTokenActionData(params: {
   nftInfo: NftInfo;
   tab: TokenAction;
   formData: TokenActionFormData;
+  isSecondButton: boolean;
 }): TokenActionData {
-  const { nftInfo, tab, formData } = params;
+  const { nftInfo, tab, formData, isSecondButton } = params;
   const txs: TokenActionTransactionParams[] = [];
 
   switch (tab) {
@@ -52,28 +55,52 @@ function initialTokenActionData(params: {
       break;
 
     case "approve":
-      txs.push({
-        nftAddress: nftInfo.tokenAddress,
-        collectionAddress: nftInfo.collectionAddress,
-        sender: nftInfo.owner,
-        txType: "nft:approve",
-        nftApproveParams: {
-          to: formData.addresses[0],
-        },
-      } as NftApproveTransactionParams);
+      if (isSecondButton) {
+        txs.push({
+          nftAddress: nftInfo.tokenAddress,
+          collectionAddress: nftInfo.collectionAddress,
+          sender: nftInfo.owner,
+          txType: "nft:approve",
+          nftApproveParams: {
+            to: undefined,
+          },
+        } as NftApproveTransactionParams);
+      } else {
+        txs.push({
+          nftAddress: nftInfo.tokenAddress,
+          collectionAddress: nftInfo.collectionAddress,
+          sender: nftInfo.owner,
+          txType: "nft:approve",
+          nftApproveParams: {
+            to: formData.addresses[0],
+          },
+        } as NftApproveTransactionParams);
+      }
       break;
 
     case "sell":
-      console.log("sell", formData.salePrice);
-      txs.push({
-        nftAddress: nftInfo.tokenAddress,
-        collectionAddress: nftInfo.collectionAddress,
-        sender: nftInfo.owner,
-        txType: "nft:sell",
-        nftSellParams: {
-          price: formData.salePrice,
-        },
-      } as NftSellTransactionParams);
+      if (isSecondButton) {
+        txs.push({
+          nftAddress: nftInfo.tokenAddress,
+          collectionAddress: nftInfo.collectionAddress,
+          sender: nftInfo.owner,
+          txType: "nft:approve",
+          nftApproveParams: {
+            to: undefined,
+          },
+        } as NftApproveTransactionParams);
+      } else {
+        console.log("sell", formData.salePrice);
+        txs.push({
+          nftAddress: nftInfo.tokenAddress,
+          collectionAddress: nftInfo.collectionAddress,
+          sender: nftInfo.owner,
+          txType: "nft:sell",
+          nftSellParams: {
+            price: formData.salePrice,
+          },
+        } as NftSellTransactionParams);
+      }
       break;
 
     case "buy":
@@ -116,6 +143,7 @@ export function NftActionComponent({
   const { transactionStates, setTokenData, setFormData } = useTransactionStore(
     (state) => state
   );
+  const { address, setAddress } = useContext(AddressContext);
 
   const state: TransactionTokenState = transactionStates[collectionAddress]?.[
     tokenAddress
@@ -149,13 +177,17 @@ export function NftActionComponent({
     });
   }
 
-  async function onSubmit(formData: TokenActionFormData) {
+  async function onSubmit(
+    formData: TokenActionFormData,
+    isSecondButton: boolean
+  ) {
     if (DEBUG) console.log("Processing form", formData);
     if (!nftInfo) return;
     const tokenData = initialTokenActionData({
       nftInfo,
       tab,
       formData,
+      isSecondButton,
     });
 
     setTokenData({
@@ -237,6 +269,29 @@ export function NftActionComponent({
             showAddress={tab === "transfer" || tab === "approve"}
             showSalePrice={tab === "buy"}
             price={nftInfo?.price}
+            disableButton={
+              (tab === "buy" && nftInfo?.price === undefined) ||
+              (tab === "transfer" &&
+                address !== nftInfo?.owner &&
+                address !== nftInfo?.approved) ||
+              (tab === "approve" && address !== nftInfo?.owner) ||
+              (tab === "sell" && address !== nftInfo?.owner)
+            }
+            showSecondButton={
+              (tab === "sell" &&
+                nftInfo?.price !== undefined &&
+                address === nftInfo?.owner) ||
+              (tab === "approve" &&
+                nftInfo?.approved !== undefined &&
+                address === nftInfo?.owner)
+            }
+            secondButtonText={
+              tab === "sell"
+                ? "Cancel Sale"
+                : tab === "approve"
+                ? "Revoke Approval"
+                : undefined
+            }
           />
         </div>
       )}

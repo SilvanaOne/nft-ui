@@ -5,7 +5,7 @@ import { checkAddress } from "@/lib/address";
 import { TokenActionFormData } from "@/context/action";
 
 export interface TokenActionFormProps {
-  onSubmit: (data: TokenActionFormData) => void;
+  onSubmit: (data: TokenActionFormData, isSecondButton: boolean) => void;
   onChange: (data: TokenActionFormData) => void;
   title?: string;
   buttonText: string;
@@ -16,6 +16,9 @@ export interface TokenActionFormProps {
   showAddress: boolean;
   showSalePrice: boolean;
   price?: number;
+  showSecondButton?: boolean;
+  secondButtonText?: string;
+  disableButton?: boolean;
 }
 
 export function TokenActionForm({
@@ -30,6 +33,9 @@ export function TokenActionForm({
   showAddMore,
   showAmount,
   price,
+  showSecondButton,
+  secondButtonText,
+  disableButton,
 }: TokenActionFormProps) {
   async function onChangeAddress(
     index: number,
@@ -56,9 +62,9 @@ export function TokenActionForm({
   //   onChange({ ...data, price: parseFloat(e.target.value) });
   // }
 
-  const handleSubmit = () => {
+  const handleSubmit = (isSecondButton: boolean) => {
     if (onSubmit) {
-      onSubmit(data);
+      onSubmit(data, isSecondButton);
     }
   };
 
@@ -183,11 +189,24 @@ export function TokenActionForm({
 
         <div className="mt-6 flex justify-center">
           <button
-            onClick={handleSubmit}
-            className="rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+            onClick={() => handleSubmit(false)}
+            disabled={disableButton}
+            className={`rounded-full py-3 px-8 text-center font-semibold text-white transition-all ${
+              disableButton
+                ? "bg-jacarta-300 cursor-not-allowed"
+                : "bg-accent shadow-accent-volume hover:bg-accent-dark"
+            }`}
           >
             {buttonText}
           </button>
+          {showSecondButton && (
+            <button
+              onClick={() => handleSubmit(true)}
+              className="ml-8 rounded-full bg-accent py-3 px-8 text-center font-semibold text-white shadow-accent-volume transition-all hover:bg-accent-dark"
+            >
+              {secondButtonText ?? "Cancel"}
+            </button>
+          )}
         </div>
       </div>
     </div>
