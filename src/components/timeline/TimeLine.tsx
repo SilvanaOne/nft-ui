@@ -122,9 +122,10 @@ export function deleteTimelineGroup(params: {
 export interface TimeLineProps {
   items: TimelineGroupDated[];
   dark?: boolean;
+  onClose?: () => void;
 }
 
-export function TimeLine({ items, dark }: TimeLineProps) {
+export function TimeLine({ items, dark, onClose }: TimeLineProps) {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [sortedItems, setSortedItems] = useState<TimelineGroupDated[]>([]);
 
@@ -182,6 +183,25 @@ export function TimeLine({ items, dark }: TimeLineProps) {
 
   return (
     <div className="mb-10 shrink-0 basis-8/12 space-y-5 lg:mb-0 lg:pr-10">
+      {onClose && (
+        <div className="flex justify-end">
+          <button
+            className="group hover:bg-accent focus:bg-accent p-2 rounded-lg transition-colors"
+            onClick={onClose}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              className="h-4 w-4 fill-jacarta-500 group-hover:fill-white group-focus:fill-white dark:fill-jacarta-200"
+            >
+              <path fill="none" d="M0 0h24v24H0z" />
+              <path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z" />
+            </svg>
+          </button>
+        </div>
+      )}
       {sortedItems.map((elm, i) => (
         <div
           key={i}

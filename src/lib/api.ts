@@ -26,8 +26,16 @@ import {
   sellNft,
   buyNft,
   NftMintTransactionParams,
+  getTransactions as getTransactionsApi,
+  TransactionData,
+  getTokenHolders as getTokenHoldersApi,
+  TokenHolder,
+  TxStatus,
+  TxStatusData,
 } from "@silvana-one/api";
 import { getChain } from "./chain";
+
+export type { TokenHolder, TransactionData };
 
 const chain = getChain();
 const apiKey = process.env.MINATOKENS_JWT_KEY;
@@ -461,15 +469,81 @@ export async function balance(address: string): Promise<
       error?: string;
     }
 > {
-  const reply = (
-    await getTokenBalance({
-      body: { address },
-    })
-  ).data;
-  if (!reply) return { success: false, error: "Error getting balance" };
-  return {
-    success: true,
-    balance: reply.balance,
-    hasAccount: reply.hasAccount ?? false,
-  };
+  try {
+    const reply = (
+      await getTokenBalance({
+        body: { address },
+      })
+    ).data;
+    if (!reply) return { success: false, error: "Error getting balance" };
+    return {
+      success: true,
+      balance: reply.balance,
+      hasAccount: reply.hasAccount ?? false,
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Error getting balance" };
+  }
+}
+
+export async function getTransactions(params: {
+  collectionAddress: string;
+  nftAddress?: string;
+}): Promise<
+  | {
+      success: true;
+      transactions: TransactionData[];
+    }
+  | {
+      success: false;
+      error?: string;
+    }
+> {
+  const { collectionAddress, nftAddress } = params;
+  try {
+    const reply = (
+      await getTransactionsApi({
+        body: { tokenAddress: collectionAddress, address: nftAddress },
+      })
+    ).data;
+    if (!reply) return { success: false, error: "Error getting transactions" };
+    return {
+      success: true,
+      transactions: reply.transactions,
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Error getting transactions" };
+  }
+}
+
+export async function getTokenHolders(params: {
+  collectionAddress: string;
+}): Promise<
+  | {
+      success: true;
+      tokenHolders: TokenHolder[];
+    }
+  | {
+      success: false;
+      error?: string;
+    }
+> {
+  const { collectionAddress } = params;
+  try {
+    const reply = (
+      await getTokenHoldersApi({
+        body: { address: collectionAddress },
+      })
+    ).data;
+    if (!reply) return { success: false, error: "Error getting token holders" };
+    return {
+      success: true,
+      tokenHolders: reply.holders,
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Error getting token holders" };
+  }
 }

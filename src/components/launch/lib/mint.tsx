@@ -7,7 +7,7 @@ import {
   messages,
 } from "./messages";
 import { debug } from "@/lib/debug";
-import { getChain, getWallet } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { log } from "@/lib/log";
 import {
   buildCollectionLaunchTransaction,
@@ -23,7 +23,6 @@ import {
 import { LaunchCollectionData } from "@/lib/token";
 const DEBUG = debug();
 const chain = getChain();
-const WALLET = getWallet();
 
 export async function mintNFT(params: {
   data: LaunchCollectionData;

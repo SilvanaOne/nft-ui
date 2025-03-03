@@ -10,11 +10,11 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { socials_item } from "@/data/socials";
 import {
-  BlockberryTokenHolder,
-  getTokenHoldersByTokenId,
-  BlockberryTokenTransaction,
-  getTransactionsByToken,
-} from "@/lib/blockberry-tokens";
+  getTokenHolders,
+  getTransactions,
+  TokenHolder,
+  TransactionData,
+} from "@/lib/api";
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 // import { Order } from "@/components/orderbook/OrderBook";
 import { algoliaGetCollection, algoliaGetNFT } from "@/lib/search";
@@ -137,8 +137,8 @@ export default function NftDetails({
   const addFavorite = (tokenAddress: string) =>
     dispatch({ type: "ADD_FAVORITE", payload: { tokenAddress } });
 
-  const transactions = nftInfo?.transactions || [];
-  const setTransactions = (transactions: BlockberryTokenTransaction[]) =>
+  const transactions = nftInfo?.transactions;
+  const setTransactions = (transactions: TransactionData[]) =>
     dispatch({
       type: "SET_NFT_TRANSACTIONS",
       payload: { collectionAddress, tokenAddress, transactions },
@@ -236,19 +236,17 @@ export default function NftDetails({
   useEffect(() => {
     const fetchTransactions = async () => {
       if (item?.tokenId) {
-        const transactions = await getTransactionsByToken({
-          tokenId: item.tokenId,
+        const transactionData = await getTransactions({
+          collectionAddress,
+          nftAddress: tokenAddress,
         });
-        setTransactions(transactions?.data ?? []);
-        if (DEBUG) console.log("transactions", transactions);
+        if (transactionData.success) {
+          setTransactions(transactionData.transactions);
+        }
       }
     };
     fetchTransactions();
   }, [item]);
-
-  function isNotEmpty(value: string | undefined) {
-    return value && value.length > 0;
-  }
 
   const addLike = async () => {
     if (!like) {

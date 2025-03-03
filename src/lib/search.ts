@@ -1,11 +1,11 @@
 "use server";
 import { searchClient } from "@algolia/client-search";
-import { getChain, getSiteType } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { debug } from "@/lib/debug";
 import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
-const siteType = getSiteType();
+
 const log = logtail.with({
   chain,
   service: "search-nft",

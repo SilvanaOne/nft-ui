@@ -17,10 +17,9 @@ import NotAvailable from "@/components/pages/NotAvailable";
 import { log } from "@/lib/log";
 import { useTokenDetails } from "@/context/details";
 // import { Order } from "@/components/orderbook/OrderBook";
-import { getSiteType } from "@/lib/chain";
 import { CollectionInfo, NftInfo } from "@silvana-one/api";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
-const siteType = getSiteType();
+
 /*
 interface Item {
   id: number;
@@ -59,13 +58,13 @@ const initialCategories: Category[] = [
   {
     id: "owned",
     selected: false,
-    name: siteType === "token" ? "Tokens I own" : "My NFTs",
+    name: "My NFTs",
     icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4zm6.085 15a1.5 1.5 0 0 1 2.83 0H20v-2.968a4.5 4.5 0 0 1 0-8.064V5h-9.085a1.5 1.5 0 0 1-2.83 0H4v14h4.085zM9.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
   },
   {
     id: "issued",
     selected: false,
-    name: siteType === "token" ? "Tokens I issued" : "Collections I created",
+    name: "Collections I created",
     icon: "M2 4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v5.5a2.5 2.5 0 1 0 0 5V20a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4zm6.085 15a1.5 1.5 0 0 1 2.83 0H20v-2.968a4.5 4.5 0 0 1 0-8.064V5h-9.085a1.5 1.5 0 0 1-2.83 0H4v14h4.085zM9.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm0 5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z",
   },
   {
@@ -520,7 +519,7 @@ export default function TokenList({
 
             <div className="lg:flex mt-6">
               {/* Sidebar */}
-              {siteType === "nft" && hideSidebar !== true && (
+              {hideSidebar !== true && (
                 <Sidebar
                   collections={collections}
                   selectedCollection={selectedCollection}
@@ -651,43 +650,18 @@ export default function TokenList({
                         </div>
                       </div>*/}
                       </div>
-                      {siteType === "nft" && (
-                        <div className="mt-2 text-sm">
-                          <Link
-                            href={`/collection/${
-                              (elm as any).collectionAddress
-                            }`}
-                            className="flex hover:text-accent"
-                          >
-                            <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-left">
-                              Collection:{" "}
-                              <Highlight
-                                item={elm}
-                                attribute="collectionName"
-                              />
-                            </span>
-                          </Link>
-                        </div>
-                      )}
-                      {siteType === "token" && (
-                        <div className="mt-2 text-sm">
-                          <span className="text-jacarta-500 dark:text-jacarta-300 float-left">
-                            <Highlight item={elm} attribute="symbol" />
-                          </span>
 
-                          <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-right">
-                            {`Supply: ${
-                              (elm as any).totalSupply?.toLocaleString(
-                                undefined,
-                                {
-                                  minimumFractionDigits: 0,
-                                  maximumFractionDigits: 2,
-                                }
-                              ) ?? "0"
-                            }`}
+                      <div className="mt-2 text-sm">
+                        <Link
+                          href={`/collection/${(elm as any).collectionAddress}`}
+                          className="flex hover:text-accent"
+                        >
+                          <span className="mr-1 text-jacarta-700 dark:text-jacarta-200 float-left">
+                            Collection:{" "}
+                            <Highlight item={elm} attribute="collectionName" />
                           </span>
-                        </div>
-                      )}
+                        </Link>
+                      </div>
 
                       <div className="mt-2 flex items-center justify-between">
                         {/* <button

@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BlockberryTokenTransaction } from "@/lib/blockberry-tokens";
+import { TransactionData } from "@/lib/api";
 import { explorerTransactionUrl, getChain } from "@/lib/chain";
 const chain = getChain();
 
 interface TransactionsProps {
-  transactions: BlockberryTokenTransaction[];
+  transactions: TransactionData[];
 }
 
 export const activity = [
@@ -81,9 +81,7 @@ export function Transactions({ transactions }: TransactionsProps) {
   const [filterAction, setfilterAction] = useState<string | undefined>(
     undefined
   );
-  const [filteredItems, setFilteredItems] = useState<
-    BlockberryTokenTransaction[]
-  >([]);
+  const [filteredItems, setFilteredItems] = useState<TransactionData[]>([]);
 
   useEffect(() => {
     if (filterAction) {
@@ -275,7 +273,7 @@ export function Transactions({ transactions }: TransactionsProps) {
               className="flex w-[22%] items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
               role="cell"
             >
-              <span className="mr-1">{timeAgo(elm.age)}</span>
+              <span className="mr-1">{timeAgo(elm.timestamp)}</span>
               {/* <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

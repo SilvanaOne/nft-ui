@@ -7,18 +7,15 @@ import { NotImplemented } from "./NotImplemented";
 import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import { Transactions } from "./Transactions";
 //import History from "./History";
-import {
-  BlockberryTokenHolder,
-  BlockberryTokenTransaction,
-} from "@/lib/blockberry-tokens";
-
+import { TokenHolder, TransactionData } from "@/lib/api";
+import { Loading } from "./Loading";
 interface NftStatsProps {
   tokenAddress: string;
   collectionAddress: string;
   nftInfo: NftInfo | undefined;
   collectionInfo: CollectionInfo | undefined;
-  holders: BlockberryTokenHolder[];
-  transactions: BlockberryTokenTransaction[];
+  holders?: TokenHolder[];
+  transactions?: TransactionData[];
 }
 
 /*
@@ -329,7 +326,8 @@ export function NftStats({
             aria-labelledby="activity-tab"
           >
             {/* Filter */}
-            <Transactions transactions={transactions} />
+            {transactions && <Transactions transactions={transactions} />}
+            {!transactions && <Loading />}
           </div>
 
           {/* Trade */}

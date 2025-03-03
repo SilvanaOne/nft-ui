@@ -1,13 +1,12 @@
 "use client";
 import { getSystemInfo } from "./system-info";
 import { log as logtail } from "@logtail/next";
-import { getChainId, getSiteType } from "./chain";
+import { getChainId } from "./chain";
 import { geo, unavailableCountry, isFetchedFailed } from "./availability";
 import { nanoid } from "nanoid";
 
 const id = nanoid();
 const chainId = getChainId();
-const siteType = getSiteType();
 //TODO: remove system from the log when the version will be stable
 const system = getSystemInfo();
 export const log = logtail.with({
@@ -15,7 +14,7 @@ export const log = logtail.with({
   chainId,
   system,
   service: "web",
-  siteType,
+  siteType: "nft-standard",
 });
 
 async function logSystemInfo() {
@@ -37,7 +36,6 @@ async function logSystemInfo() {
     unavailableCountry,
     isFetchedFailed,
     infoDelay: Date.now() - start,
-    siteType,
   });
 }
 logSystemInfo();

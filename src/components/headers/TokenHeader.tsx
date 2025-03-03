@@ -13,16 +13,10 @@ import Link from "next/link";
 import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
-import {
-  getChain,
-  getSiteType,
-  getSiteName,
-  explorerAccountUrl,
-} from "@/lib/chain";
+import { getChain, getSiteName, explorerAccountUrl } from "@/lib/chain";
 import { unavailableCountry, checkAvailability } from "@/lib/availability";
 
 const chain = getChain();
-const siteType = getSiteType();
 
 type TokenHeaderProps = {
   showSearch?: boolean;
@@ -87,53 +81,29 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
       >
         <div className="flex items-center justify-between px-6 py-6 xl:px-24 ">
           {/* Logo */}
-          {siteType === "token" && (
-            <Link href="/" className="shrink-0">
+
+          <Link href="/" className="shrink-0">
+            <div className="flex items-center">
               <Image
                 width={64}
                 height={64}
-                src={"/img/zkCloudWorker-logo.png"}
+                src="/img/minanft.png"
                 className="dark:hidden"
-                alt={"MinaTokens | MINA Launchpad"}
+                alt="NFT Standard"
               />
               <Image
                 width={64}
                 height={64}
-                src={"/img/zkCloudWorker-logo.png"}
+                src="/img/minanft.png"
                 className="hidden dark:block"
-                alt={"MinaTokens | MINA Launchpad"}
+                alt="NFT Standard"
               />
-              <div className="text-jacarta-900 dark:text-white -ms-3">
+              <div className="text-jacarta-900 dark:text-white ml-3">
                 {getSiteName()}
               </div>
-              <div className="text-jacarta-900 dark:text-white -ms-3 text-xs text-center">
-                {chain === "mainnet" ? "mainnet alpha" : "devnet"}
-              </div>
-            </Link>
-          )}
-          {siteType === "nft" && (
-            <Link href="/" className="shrink-0">
-              <div className="flex items-center">
-                <Image
-                  width={64}
-                  height={64}
-                  src="/img/minanft.png"
-                  className="dark:hidden"
-                  alt="NFT Standard"
-                />
-                <Image
-                  width={64}
-                  height={64}
-                  src="/img/minanft.png"
-                  className="hidden dark:block"
-                  alt="NFT Standard"
-                />
-                <div className="text-jacarta-900 dark:text-white ml-3">
-                  {getSiteName()}
-                </div>
-              </div>
-            </Link>
-          )}
+            </div>
+          </Link>
+
           {isAvailable && (
             <nav className="navbar w-full hidden lg:block xl:ml-[8%] --border">
               <ul className="flex flex-col lg:flex-row">
@@ -176,35 +146,19 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
                 <Image
                   width={56}
                   height={66}
-                  src={
-                    siteType === "nft"
-                      ? "/img/minanft.png"
-                      : "/img/zkCloudWorker-logo.png"
-                  }
+                  src={"/img/minanft.png"}
                   className="--max-h-7 dark:hidden"
-                  alt={
-                    siteType === "nft"
-                      ? "MinaNFT"
-                      : "MinaTokens | MINA Launchpad"
-                  }
+                  alt={"MinaNFT"}
                 />
                 <Image
                   width={56}
                   height={56}
-                  src={
-                    siteType === "nft"
-                      ? "/img/minanft.png"
-                      : "/img/zkCloudWorker-logo.png"
-                  }
+                  src={"/img/minanft.png"}
                   className="hidden --max-h-7 dark:block"
-                  alt={
-                    siteType === "nft"
-                      ? "MinaNFT"
-                      : "MinaTokens | MINA Launchpad"
-                  }
+                  alt={"MinaNFT"}
                 />
                 <div className="text-jacarta-900 dark:text-white -ms-3">
-                  {siteType === "nft" ? "MinaNFT" : "MinaTokens"}
+                  {"MinaNFT"}
                 </div>
               </Link>
               {isAvailable && (

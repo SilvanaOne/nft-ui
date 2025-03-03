@@ -4,14 +4,11 @@ import React, { createContext, useReducer, useContext, ReactNode } from "react";
 import { TokenAction } from "@/lib/token";
 import { NftInfo, CollectionInfo } from "@silvana-one/api";
 // import { Order } from "@/components/orderbook/OrderBook";
-import {
-  BlockberryTokenTransaction,
-  BlockberryTokenHolder,
-} from "@/lib/blockberry-tokens";
+import { TokenHolder, TransactionData } from "@/lib/api";
 import { log } from "@/lib/log";
 interface NFTDetailsState {
   info: NftInfo | undefined;
-  transactions: BlockberryTokenTransaction[];
+  transactions?: TransactionData[];
   action: TokenAction | undefined;
   // bid: Order | undefined;
   // offer: Order | undefined;
@@ -22,8 +19,8 @@ interface NFTDetailsState {
 
 interface CollectionDetailsState {
   info: CollectionInfo | undefined;
-  holders: BlockberryTokenHolder[];
-  transactions: BlockberryTokenTransaction[];
+  holders?: TokenHolder[];
+  transactions?: TransactionData[];
   action: TokenAction | undefined;
   likes: number;
   like: boolean;
@@ -73,21 +70,21 @@ type Action =
     }
   | {
       type: "SET_HOLDERS";
-      payload: { collectionAddress: string; holders: BlockberryTokenHolder[] };
+      payload: { collectionAddress: string; holders: TokenHolder[] };
     }
   | {
       type: "SET_NFT_TRANSACTIONS";
       payload: {
         collectionAddress: string;
         tokenAddress: string;
-        transactions: BlockberryTokenTransaction[];
+        transactions: TransactionData[];
       };
     }
   | {
       type: "SET_COLLECTION_TRANSACTIONS";
       payload: {
         collectionAddress: string;
-        transactions: BlockberryTokenTransaction[];
+        transactions: TransactionData[];
       };
     }
   | {

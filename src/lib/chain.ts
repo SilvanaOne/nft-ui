@@ -1,13 +1,5 @@
 import { MinaNetworkParams, Mainnet, Devnet, Zeko } from "./networks";
 
-export function getSiteType(): "nft" | "token" {
-  const type = process.env.NEXT_PUBLIC_SITE_TYPE;
-  if (type === undefined) return "nft";
-  if (type !== "nft" && type !== "token")
-    throw new Error("NEXT_PUBLIC_SITE_TYPE must be nft or token");
-  return type;
-}
-
 export function getChain(): "mainnet" | "devnet" | "zeko" {
   const chain = process.env.NEXT_PUBLIC_CHAIN;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
@@ -41,11 +33,11 @@ export function getUrl(): string {
   return url;
 }
 
-export function getWallet(): string {
-  const wallet = process.env.NEXT_PUBLIC_WALLET;
-  if (wallet === undefined) throw new Error("NEXT_PUBLIC_WALLET is undefined");
-  return wallet;
-}
+// export function getWallet(): string {
+//   const wallet = process.env.NEXT_PUBLIC_WALLET;
+//   if (wallet === undefined) throw new Error("NEXT_PUBLIC_WALLET is undefined");
+//   return wallet;
+// }
 
 export function getNetwork(): MinaNetworkParams {
   const chain = getChain();
@@ -77,18 +69,5 @@ export function explorerTokenUrl(): string {
 }
 
 export function getSiteName(): string {
-  const type = getSiteType();
-  if (type === "nft") {
-    return "NFT Standard";
-  } else {
-    const chain = getChain();
-    switch (chain) {
-      case "mainnet":
-        return "MinaTokens";
-      case "devnet":
-        return "MinaTokens";
-      case "zeko":
-        return "ZekoTokens";
-    }
-  }
+  return "MinaNFT";
 }

@@ -7,7 +7,7 @@ import {
   messages,
 } from "@/components/launch/lib/messages";
 import { debug } from "@/lib/debug";
-import { getChain, getWallet } from "@/lib/chain";
+import { getChain } from "@/lib/chain";
 import { log } from "@/lib/log";
 import {
   buildTransaction,
@@ -24,7 +24,6 @@ import {
 import { TokenActionTransactionParams } from "@/lib/token";
 const DEBUG = debug();
 const chain = getChain();
-const WALLET = getWallet();
 
 export async function buildNftTransaction(params: {
   data: TokenActionTransactionParams;

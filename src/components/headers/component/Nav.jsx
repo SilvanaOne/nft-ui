@@ -1,8 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { getSiteType } from "@/lib/chain";
-const siteType = getSiteType();
 
 export default function Nav() {
   const pathname = usePathname();
@@ -15,68 +13,33 @@ export default function Nav() {
     <>
       <li className="group">
         <Link
-          href={siteType === "token" ? "/launch" : "/create"}
+          href={"/create"}
           className={`flex items-center justify-between py-3.5 font-display text-base  ${
             "/launch".split("/")[1] == pathname.split("/")[1]
               ? "text-accent dark:text-accent"
               : "text-jacarta-700 dark:text-white"
           }  hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
         >
-          {siteType === "token" ? "Launch" : "Create"}
+          {"Create"}
         </Link>
       </li>
-      {siteType === "nft" && (
-        <li className="group">
-          <Link
-            href="/"
-            className={`flex items-center justify-between py-3.5 font-display text-base  ${
-              "/".split("/")[1] == pathname.split("/")[1]
-                ? "text-accent dark:text-accent"
-                : "text-jacarta-700 dark:text-white"
-            }  hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
-          >
-            Explore
-          </Link>
-        </li>
-      )}
-
-      {siteType === "token" && (
-        <>
-          <li className="group">
-            <Link
-              href="/explore"
-              className={`flex items-center justify-between py-3.5 font-display text-base  ${
-                "/explore".split("/")[1] == pathname.split("/")[1]
-                  ? "text-accent dark:text-accent"
-                  : "text-jacarta-700 dark:text-white"
-              }  hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
-            >
-              Explore
-            </Link>
-          </li>
-
-          <li className="group">
-            <Link
-              href="/api"
-              className={`flex items-center justify-between py-3.5 font-display text-base  ${
-                "/api".split("/")[1] == pathname.split("/")[1]
-                  ? "text-accent dark:text-accent"
-                  : "text-jacarta-700 dark:text-white"
-              }  hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
-            >
-              API
-            </Link>
-          </li>
-        </>
-      )}
 
       <li className="group">
         <Link
-          href={
-            siteType === "token"
-              ? "https://docs.minatokens.com"
-              : "https://docs.minanft.io"
-          }
+          href="/"
+          className={`flex items-center justify-between py-3.5 font-display text-base  ${
+            "/".split("/")[1] == pathname.split("/")[1]
+              ? "text-accent dark:text-accent"
+              : "text-jacarta-700 dark:text-white"
+          }  hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
+        >
+          Explore
+        </Link>
+      </li>
+
+      <li className="group">
+        <Link
+          href={"https://docs.minanft.io"}
           target="_blank"
           rel="noopener noreferrer"
           className={`flex items-center justify-between py-3.5 font-display text-base text-jacarta-700 dark:text-white

@@ -10,7 +10,7 @@ const log = logtail.with({
   chain,
 });
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "" });
 let rateLimiter: RateLimiterRedis | null = null;
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
 
@@ -136,9 +136,13 @@ function initializeRedisRateLimiterInternal(params: {
 
 export async function rateLimit(params: { key: string }): Promise<boolean> {
   const { key } = params;
+  if (!RATE_LIMIT_KV_URL) {
+    log.error("rateLimit: RATE_LIMIT_KV_URL not set");
+    return true;
+  }
   try {
     if (!rateLimiter) {
-      log.error(`Rate limiter ${name} not initialized`);
+      log.error(`Rate limiter not initialized`);
       return false;
     }
 

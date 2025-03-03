@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { BlockberryTokenHolder } from "@/lib/blockberry-tokens";
+import { TokenHolder } from "@/lib/api";
 import { explorerAccountUrl } from "@/lib/chain";
 
 interface HoldersProps {
-  holders: BlockberryTokenHolder[];
+  holders: TokenHolder[];
 }
 
 export function Holders({ holders }: HoldersProps) {
@@ -33,7 +33,7 @@ export function Holders({ holders }: HoldersProps) {
           </span>
         </div>
       </div>
-      {holders.map((elm: BlockberryTokenHolder, i: number) => (
+      {holders.map((elm: TokenHolder, i: number) => (
         <div key={i} className="contents" role="row">
           <div
             className="flex items-center border-t border-jacarta-100 py-4 px-4 dark:border-jacarta-600"
@@ -47,12 +47,12 @@ export function Holders({ holders }: HoldersProps) {
             role="cell"
           >
             <Link
-              href={`${explorerAccountUrl()}${elm.holderAddress}`}
+              href={`${explorerAccountUrl()}${elm.address}`}
               className="text-accent hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >
-              {elm.holderAddress}
+              {elm.address}
             </Link>
           </div>
         </div>

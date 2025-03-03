@@ -10,11 +10,11 @@ import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { socials_item } from "@/data/socials";
 import {
-  BlockberryTokenHolder,
-  getTokenHoldersByTokenId,
-  BlockberryTokenTransaction,
-  getTransactionsByToken,
-} from "@/lib/blockberry-tokens";
+  TokenHolder,
+  TransactionData,
+  getTokenHolders,
+  getTransactions,
+} from "@/lib/api";
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 // import { Order } from "@/components/orderbook/OrderBook";
 import Banner from "./Banner";
@@ -71,12 +71,12 @@ export default function CollectionDetails({
   const addFavorite = (tokenAddress: string) =>
     dispatch({ type: "ADD_FAVORITE", payload: { tokenAddress } });
 
-  const holders = collectionDetails.holders || [];
-  const setHolders = (holders: BlockberryTokenHolder[]) =>
+  const holders = collectionDetails.holders;
+  const setHolders = (holders: TokenHolder[]) =>
     dispatch({ type: "SET_HOLDERS", payload: { collectionAddress, holders } });
 
-  const transactions = collectionDetails.transactions || [];
-  const setTransactions = (transactions: BlockberryTokenTransaction[]) =>
+  const transactions = collectionDetails.transactions;
+  const setTransactions = (transactions: TransactionData[]) =>
     dispatch({
       type: "SET_COLLECTION_TRANSACTIONS",
       payload: { collectionAddress, transactions },
@@ -144,14 +144,16 @@ export default function CollectionDetails({
   useEffect(() => {
     const fetchHolders = async () => {
       if (item?.tokenId) {
-        const holders = await getTokenHoldersByTokenId({
-          tokenId: item.tokenId,
+        const holdersData = await getTokenHolders({
+          collectionAddress,
         });
-        const filteredHolders = holders?.data.filter(
-          (holder) => holder.holderAddress !== collectionAddress
-        );
-        setHolders(filteredHolders ?? []);
-        if (DEBUG) console.log("holders", filteredHolders);
+        if (holdersData.success) {
+          const filteredHolders = holdersData.tokenHolders.filter(
+            (holder) => holder.address !== collectionAddress
+          );
+          setHolders(filteredHolders);
+          if (DEBUG) console.log("holders", filteredHolders);
+        }
       }
     };
     fetchHolders();
@@ -160,11 +162,13 @@ export default function CollectionDetails({
   useEffect(() => {
     const fetchTransactions = async () => {
       if (item?.tokenId) {
-        const transactions = await getTransactionsByToken({
-          tokenId: item.tokenId,
+        const transactionsData = await getTransactions({
+          collectionAddress,
         });
-        setTransactions(transactions?.data ?? []);
-        if (DEBUG) console.log("transactions", transactions);
+        if (transactionsData.success) {
+          setTransactions(transactionsData.transactions);
+          if (DEBUG) console.log("transactions", transactionsData.transactions);
+        }
       }
     };
     fetchTransactions();
