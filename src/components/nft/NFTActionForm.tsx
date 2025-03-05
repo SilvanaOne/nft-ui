@@ -156,12 +156,16 @@ export function TokenActionForm({
                   className="w-full rounded-lg border border-jacarta-100 py-3 px-3 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                   placeholder="Enter amount"
                   value={data.amount ?? ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    let amount = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                    if (amount===0) {
+                      amount = undefined;
+                    }
                     onChange({
                       ...data,
-                      amount: parseFloat(e.target.value) || 0,
-                    })
-                  }
+                      amount,
+                    });
+                  }}
                 />
               </div>
             )}
@@ -175,12 +179,16 @@ export function TokenActionForm({
                   className="w-full rounded-lg border border-jacarta-100 py-3 px-3 text-sm focus:ring-inset focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder-jacarta-300"
                   placeholder="Enter price"
                   value={data.salePrice ?? ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    let amount = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                    if (amount===0) {
+                      amount = undefined;
+                    }
                     onChange({
                       ...data,
-                      salePrice: parseFloat(e.target.value) || 0,
-                    })
-                  }
+                      salePrice: amount,
+                    });
+                  }}
                 />
               </div>
             )}
