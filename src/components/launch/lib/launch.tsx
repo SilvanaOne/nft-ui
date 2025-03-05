@@ -929,8 +929,8 @@ export async function launchNFT(params: {
     }, 250); // Fire confetti every 250 milliseconds
     await stopProcessUpdateRequests();
   } catch (error: any) {
-    console.error("launchToken catch:", error);
-    log.error("launchToken: error launching token", { error });
+    console.error("launchNFT catch:", error);
+    log.error("launchNFT: error launching token", { error });
     addLog({
       groupId: "error",
       status: "error",

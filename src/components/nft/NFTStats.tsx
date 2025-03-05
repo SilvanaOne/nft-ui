@@ -9,6 +9,8 @@ import { Transactions } from "./Transactions";
 //import History from "./History";
 import { TokenHolder, TransactionData } from "@/lib/api";
 import { Loading } from "./Loading";
+import { getChain } from "@/lib/chain";
+const chain = getChain();
 interface NftStatsProps {
   tokenAddress: string;
   collectionAddress: string;
@@ -180,6 +182,7 @@ export function NftStats({
           </li> */}
 
           {/* Activity */}
+          {chain !== 'zeko' && (
           <li className="nav-item" role="presentation">
             <button
               className="nav-link relative flex items-center whitespace-nowrap py-3 px-6 text-jacarta-400 hover:text-jacarta-700 dark:hover:text-white"
@@ -204,8 +207,9 @@ export function NftStats({
               <span className="font-display text-base font-medium">
                 Transactions
               </span>
-            </button>
-          </li>
+              </button>
+            </li>
+          )}
 
           {/* Admin Panel */}
           <li className="nav-item" role="presentation">
@@ -326,8 +330,8 @@ export function NftStats({
             aria-labelledby="activity-tab"
           >
             {/* Filter */}
-            {transactions && <Transactions transactions={transactions} />}
-            {!transactions && <Loading />}
+            {transactions && chain !== 'zeko' && <Transactions transactions={transactions} />}
+            {!transactions && chain !== 'zeko' && <Loading />}
           </div>
 
           {/* Trade */}
