@@ -69,5 +69,9 @@ export function explorerTokenUrl(): string {
 }
 
 export function getSiteName(): string {
-  return "MinaNFT";
+  const chain = getChain();
+  if (chain === "mainnet") return "MinaNFT";
+  if (chain === "devnet") return "MinaNFT";
+  if (chain === "zeko") return "MinaNFT Zeko";
+  throw new Error("Chain not supported");
 }
