@@ -14,11 +14,11 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "" });
 let rateLimiter: RateLimiterRedis | null = null;
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
 
-initializeRedisRateLimiterInternal({
-  name: "ai",
-  points: 15,
-  duration: 60 * 60 * 24, // 1 day
-});
+// initializeRedisRateLimiterInternal({
+//   name: "ai",
+//   points: 15,
+//   duration: 60 * 60 * 24, // 1 day
+// });
 
 export async function generateImage(params: {
   symbol: string;

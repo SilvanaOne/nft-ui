@@ -122,6 +122,9 @@ export async function mintNFT(params: {
       const launchReply = await buildCollectionLaunchTransaction(
         collectionLaunchParams
       );
+      console.log("launchCollection: build tx result", {
+        launchReply,
+      });
       if (!launchReply.success) {
         if (DEBUG)
           console.log("Error in launchCollection", {

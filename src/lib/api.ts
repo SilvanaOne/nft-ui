@@ -96,11 +96,17 @@ export async function buildCollectionLaunchTransaction(
       error: string;
     }
 > {
+  console.log("buildCollectionLaunchTransaction: building transaction", {
+    params,
+  });
   const tx = (
     await launchNftCollection({
       body: params,
     })
   ).data;
+  console.log("buildCollectionLaunchTransaction: transaction result", {
+    tx,
+  });
   if (!tx) return { success: false, error: "Failed to build transaction" };
   if (!tx.privateMetadata)
     return { success: false, error: "Failed to get private metadata" };
