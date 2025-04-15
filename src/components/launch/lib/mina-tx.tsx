@@ -107,96 +107,112 @@ export async function waitForProveJob(params: {
   for (let i = 0; i < length; i++) {
     const txResult = result?.results?.results?.[i];
     const transaction = txResult.tx;
-    const msg = messages.txSent;
+    const hash = txResult.hash;
     const lineId = length > 1 ? ` ${i + 1}` : "";
-    msg.lineId = "txSent" + lineId;
-    updateTimelineItem({
-      groupId,
-      update: msg,
-    });
-
-    if (!transaction) {
-      log.error("waitForProveJob: Transaction is undefined");
-      return false;
-    }
-
-    const start = Date.now();
-    let sendResult = await sendTransaction(transaction);
-    const TIMEOUT = 1000 * 60 * 30;
-    let attempt = 1;
-    while (
-      (sendResult.success === false || sendResult.reply.hash === undefined) &&
-      Date.now() - start < TIMEOUT
-    ) {
-      attempt++;
-      console.log(`Sending transaction (${attempt})...`, sendResult);
+    if (hash) {
+      includedPromises.push(
+        waitForMinaTx({
+          hash: hash,
+          groupId,
+          lineId,
+          updateTimelineItem,
+          type,
+        })
+      );
+    } else {
+      const msg = messages.txSent;
+      msg.lineId = "txSent" + lineId;
       updateTimelineItem({
         groupId,
-        update: {
-          lineId: "txSent" + lineId,
-          content: `Error: Unable to send transaction to ${chain}. ${
-            sendResult.success && sendResult?.reply?.status
-              ? "Received status: " + sendResult.reply.status + ". "
-              : ""
-          } Response: ${String(
-            (sendResult.success && sendResult?.reply?.error) ?? "error D4381"
-          )}. Retrying (attempt ${attempt})...`,
-          status: "waiting",
-        },
+        update: msg,
       });
-      if (attempt % 5 === 0)
-        log.error("waitForProveJob: Failed to send transaction to blockchain", {
-          sendResult,
-          attempt,
-          chain,
+
+      if (!transaction) {
+        log.error("waitForProveJob: Transaction is undefined");
+        return false;
+      }
+
+      const start = Date.now();
+      let sendResult = await sendTransaction(transaction);
+      const TIMEOUT = 1000 * 60 * 30;
+      let attempt = 1;
+      while (
+        (sendResult.success === false || sendResult.reply.hash === undefined) &&
+        Date.now() - start < TIMEOUT
+      ) {
+        attempt++;
+        console.log(`Sending transaction (${attempt})...`, sendResult);
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "txSent" + lineId,
+            content: `Error: Unable to send transaction to ${chain}. ${
+              sendResult.success && sendResult?.reply?.status
+                ? "Received status: " + sendResult.reply.status + ". "
+                : ""
+            } Response: ${String(
+              (sendResult.success && sendResult?.reply?.error) ?? "error D4381"
+            )}. Retrying (attempt ${attempt})...`,
+            status: "waiting",
+          },
         });
-      await sleep(5000 * attempt);
-      sendResult = await sendTransaction(transaction);
-    }
-    if (DEBUG)
-      console.log(
-        "Transaction sent:",
-        sendResult,
-        "in",
-        attempt,
-        "attempt after",
-        Date.now() - start,
-        "ms"
-      );
-    if (sendResult.success === false || sendResult.reply.hash === undefined) {
-      updateTimelineItem({
-        groupId,
-        update: {
-          lineId: "txSent" + lineId,
-          content: `Failed to send transaction to Mina blockchain: ${
-            sendResult.success && sendResult?.reply?.status
-              ? "status: " + sendResult.reply.status + ", "
-              : ""
-          } ${String(
-            (sendResult.success && sendResult?.reply?.error) ?? "error D437"
-          )}`,
-          status: "error",
-        },
-      });
-      log.error(
-        "waitForProveJob: Failed to send transaction to Mina blockchain",
-        {
+        if (attempt % 5 === 0)
+          log.error(
+            "waitForProveJob: Failed to send transaction to blockchain",
+            {
+              sendResult,
+              attempt,
+              chain,
+            }
+          );
+        await sleep(5000 * attempt);
+        sendResult = await sendTransaction(transaction);
+      }
+      if (DEBUG)
+        console.log(
+          "Transaction sent:",
           sendResult,
+          "in",
           attempt,
-          chain,
-        }
+          "attempt after",
+          Date.now() - start,
+          "ms"
+        );
+      if (sendResult.success === false || sendResult.reply.hash === undefined) {
+        updateTimelineItem({
+          groupId,
+          update: {
+            lineId: "txSent" + lineId,
+            content: `Failed to send transaction to Mina blockchain: ${
+              sendResult.success && sendResult?.reply?.status
+                ? "status: " + sendResult.reply.status + ", "
+                : ""
+            } ${String(
+              (sendResult.success && sendResult?.reply?.error) ?? "error D437"
+            )}`,
+            status: "error",
+          },
+        });
+        log.error(
+          "waitForProveJob: Failed to send transaction to Mina blockchain",
+          {
+            sendResult,
+            attempt,
+            chain,
+          }
+        );
+        return false;
+      }
+      includedPromises.push(
+        waitForMinaTx({
+          hash: sendResult.reply.hash,
+          groupId,
+          lineId,
+          updateTimelineItem,
+          type,
+        })
       );
-      return false;
     }
-    includedPromises.push(
-      waitForMinaTx({
-        hash: sendResult.reply.hash,
-        groupId,
-        lineId,
-        updateTimelineItem,
-        type,
-      })
-    );
   }
 
   // const txIncluded = await waitForMinaTx({

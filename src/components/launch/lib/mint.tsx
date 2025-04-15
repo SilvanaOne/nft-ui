@@ -313,29 +313,6 @@ export async function mintNFT(params: {
 
     const jobId = proveReply.jobId;
 
-    const jobIdMessage = (
-      <>
-        <a
-          href={`https://zkcloudworker.com/job/${jobId}`}
-          className="text-accent hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Proving
-        </a>{" "}
-        the transaction...
-      </>
-    );
-
-    updateTimelineItem({
-      groupId,
-      update: {
-        lineId: "txProved",
-        content: jobIdMessage,
-        status: "waiting",
-      },
-    });
-
     return {
       success: true,
       jobId,
