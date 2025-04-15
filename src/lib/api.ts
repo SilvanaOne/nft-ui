@@ -37,6 +37,8 @@ import { getChain } from "./chain";
 
 export type { TokenHolder, TransactionData };
 
+const SEND_TRANSACTION = true;
+
 const chain = getChain();
 const apiKey = process.env.MINATOKENS_JWT_KEY;
 if (!apiKey) {
@@ -379,10 +381,11 @@ export async function buildTransaction(
 export async function proveTransaction(params: {
   tx: NftTransaction;
   signedData: string;
+  sendTransaction?: boolean;
 }): Promise<
   { success: true; jobId: string } | { success: false; error: string }
 > {
-  const { tx, signedData } = params;
+  const { tx, signedData, sendTransaction = SEND_TRANSACTION } = params;
   console.log("proveTransaction: proving transaction", {
     send: tx.sendTransaction,
   });
@@ -391,6 +394,7 @@ export async function proveTransaction(params: {
       body: {
         tx,
         signedData,
+        sendTransaction,
       },
     })
   ).data;
@@ -398,9 +402,11 @@ export async function proveTransaction(params: {
   return { success: true, jobId: proveTx.jobId };
 }
 
-export async function proveTransactions(
-  params: NftTransaction[]
-): Promise<string | undefined> {
+export async function proveTransactions(params: {
+  transactions: NftTransaction[];
+  sendTransaction?: boolean;
+}): Promise<string | undefined> {
+  const { transactions, sendTransaction = SEND_TRANSACTION } = params;
   throw new Error("Not implemented");
   return undefined;
 }

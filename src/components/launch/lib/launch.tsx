@@ -638,6 +638,29 @@ export async function launchNFT(params: {
 
     if (isError()) return;
 
+    const jobIdMessage = (
+      <>
+        <a
+          href={`https://silvascan.io/testnet/agent-job/${jobId}`}
+          className="text-accent hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Proving
+        </a>{" "}
+        the transaction...
+      </>
+    );
+
+    updateTimelineItem({
+      groupId: "deploy",
+      update: {
+        lineId: "txProved",
+        content: jobIdMessage,
+        status: "waiting",
+      },
+    });
+
     setLikes((likes += 10));
 
     const txIncluded = await waitForProveJob({
