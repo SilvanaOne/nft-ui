@@ -63,7 +63,8 @@ export async function waitForProveJob(params: {
     jobStatus === "failed" ||
     result.success === false ||
     !result?.results ||
-    result?.results?.results?.[0]?.tx === undefined
+    (result?.results?.results?.[0]?.tx === undefined &&
+      result?.results?.results?.[0]?.hash === undefined)
   ) {
     updateTimelineItem({
       groupId,
@@ -83,7 +84,7 @@ export async function waitForProveJob(params: {
     <>
       Transaction is{" "}
       <a
-        href={`https://zkcloudworker.com/job/${jobId}`}
+        href={`https://silvascan.io/testnet/agent-job/${jobId}`}
         className="text-accent hover:underline"
         target="_blank"
         rel="noopener noreferrer"

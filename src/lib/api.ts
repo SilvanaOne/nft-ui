@@ -389,12 +389,12 @@ export async function proveTransaction(params: {
   console.log("proveTransaction: proving transaction", {
     send: tx.sendTransaction,
   });
+  tx.sendTransaction = sendTransaction;
   const proveTx = (
     await prove({
       body: {
         tx,
         signedData,
-        sendTransaction,
       },
     })
   ).data;
