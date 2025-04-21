@@ -198,7 +198,7 @@ export async function buildNftTransaction(params: {
     const jobIdMessage = (
       <>
         <a
-          href={`https://zkcloudworker.com/job/${jobId}`}
+          href={`https://silvascan.io/testnet/agent-job/${jobId}`}
           className="text-accent hover:underline"
           target="_blank"
           rel="noopener noreferrer"
