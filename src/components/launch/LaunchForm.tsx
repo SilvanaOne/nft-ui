@@ -2,11 +2,18 @@
 import Image from "next/image";
 import { FileUpload } from "./FileUpload";
 import React, { useEffect, useState, useContext } from "react";
+import { toast } from "react-toastify";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { checkAddress } from "@/lib/address";
 import { shortenString } from "@/lib/short";
-import { LaunchCollectionData, Trait, Permissions } from "@/lib/token";
+import {
+  LaunchCollectionData,
+  Trait,
+  Permissions,
+  CollectionPermissions,
+  NftPermissions,
+} from "@/lib/token";
 import { checkAvailability, unavailableCountry } from "@/lib/availability";
 import { TraitsModal } from "@/components/modals/TraitsModal";
 import { log } from "@/lib/log";
@@ -18,9 +25,22 @@ import {
   randomImage,
 } from "@/lib/random";
 import { PermissionsModal } from "../modals/PermissionsModal";
-import { CollectionInfo } from "@silvana-one/api";
+import { CollectionInfo, CmsnftData } from "@silvana-one/api";
 import { algoliaGetCollectionList } from "@/lib/search";
+import { cmsStoreNFT } from "@/lib/cms";
+import { pinImage } from "@/lib/ipfs";
+import { readFileAsync } from "./lib/launch";
+import { storeNft, readNft } from "@/lib/api";
+import { sleep } from "@/lib/sleep";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
+
+export interface CmsSignature {
+  data: string;
+  field: string;
+  scalar: string;
+  expiry: number;
+  publicKey: string;
+}
 
 export function LaunchForm({
   onLaunch,
@@ -52,7 +72,74 @@ export function LaunchForm({
   const [collectionAddress, setCollectionAddress] = useState<
     string | undefined
   >(undefined);
+  const [nftData, setNftData] = useState<CmsnftData[]>([]);
   const { address, setAddress } = useContext(AddressContext);
+
+  const selectCollection = (collection: string) => {
+    if (DEBUG) console.log("selectCollection", collection);
+    setCollectionAddress(collection);
+  };
+
+  const restoreSavedNFT = (nft: CmsnftData) => {
+    console.log("restoreSavedNFT", nft);
+    if (!nft) return;
+
+    setName(nft.name);
+    setDescription(nft.description);
+    setImageURL(nft.imageURL);
+
+    // Set traits if available
+    if (nft.traits && nft.traits.length > 0) {
+      setTraits(
+        nft.traits.map((trait) => ({
+          key: trait.key,
+          value: trait.value as string,
+        }))
+      );
+      setTraitsText(`${nft.traits.length} traits`);
+    } else {
+      setTraits([]);
+      setTraitsText("No traits");
+    }
+
+    // Set permissions if available
+    if (nft.nftData && permissions) {
+      setPermissions({
+        nft: new NftPermissions({
+          ...nft.nftData,
+        }),
+        collection: permissions?.collection,
+      });
+      setPermissionsText("Custom");
+    } else {
+      setPermissions(undefined);
+      setPermissionsText("Standard");
+    }
+
+    if (DEBUG) console.log("Restored NFT data:", nft.name);
+  };
+
+  useEffect(() => {
+    async function getNftData() {
+      if (!collectionAddress) {
+        setNftData([]);
+        return;
+      }
+      const nftData = await readNft({
+        collectionAddress: collectionAddress,
+      });
+      if (nftData.success) {
+        setNftData(nftData.nfts);
+      } else {
+        log.error("LaunchForm: failed to read NFT data", {
+          adminAddress,
+          error: nftData.error,
+        });
+        setNftData([]);
+      }
+    }
+    getNftData();
+  }, [collectionAddress]);
 
   async function addressChanged(address: string | undefined) {
     if (address) {
@@ -173,11 +260,8 @@ export function LaunchForm({
     }
   };
 
-  const launchToken = async () => {
-    if (buttonDisabled) {
-      generateRandomData();
-      return;
-    }
+  const launchToken = async (params: { storeInCMS: boolean }) => {
+    const { storeInCMS } = params;
     if (!adminAddress) {
       await getAddress();
       return;
@@ -195,12 +279,21 @@ export function LaunchForm({
       window.location.href = "/not-available";
       return;
     }
-    log.info("LaunchForm: launching token", { adminAddress, symbol, name });
+
+    log.info("LaunchForm: launching NFT", {
+      adminAddress,
+      symbol,
+      name,
+      storeInCMS,
+      mintType,
+      collectionAddress,
+    });
     if (!symbol) {
       log.error("LaunchForm: no symbol", { adminAddress });
       return;
     }
-    onLaunch({
+
+    const launchData: LaunchCollectionData = {
       symbol,
       mintType,
       collectionAddress,
@@ -214,7 +307,86 @@ export function LaunchForm({
       traits,
       collectionPermissions: permissions?.collection,
       nftPermissions: permissions?.nft,
-    });
+    };
+    if (storeInCMS) {
+      if (launchData.imageURL === undefined) {
+        if (!image) {
+          log.error("LaunchForm: no image for CMS", { adminAddress });
+          return;
+        }
+        const base64 = await readFileAsync(image);
+        launchData.imageURL = await pinImage({ imageBase64: base64 });
+        if (launchData.imageURL === undefined) {
+          log.error("LaunchForm: failed to pin image for CMS", {
+            adminAddress,
+          });
+          return;
+        }
+        launchData.image = undefined;
+      }
+      const convertResult = await cmsStoreNFT({
+        data: launchData,
+      });
+      if (convertResult.success) {
+        const cmsNft = convertResult.nft;
+        const expiry = Date.now() + 1000 * 60 * 60;
+        const message: string = JSON.stringify({
+          nft: cmsNft,
+          expiry,
+        });
+
+        const signedSata = await (window as any)?.mina?.signMessage({
+          message,
+        });
+        console.log("signedSata", signedSata);
+        const signatureData: CmsSignature = {
+          data: message,
+          field: signedSata?.signature?.field,
+          scalar: signedSata?.signature?.scalar,
+          expiry,
+          publicKey: signedSata?.publicKey,
+        };
+        console.log("signatureData", signatureData);
+        const storeResult = await storeNft({
+          nft: cmsNft,
+          signature: JSON.stringify(signatureData),
+        });
+        console.log("storeResult", storeResult);
+        if (storeResult.success) {
+          console.log("NFT successfully saved for minting later");
+          // Show success popup message to user
+          toast.success("NFT successfully saved for minting later", {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          if (collectionAddress) {
+            await sleep(1000);
+            const nftData = await readNft({
+              collectionAddress: collectionAddress,
+            });
+            if (nftData.success) {
+              setNftData(nftData.nfts);
+            }
+          }
+        } else {
+          log.error("LaunchForm: failed to store NFT in CMS", {
+            adminAddress,
+            error: storeResult.error,
+          });
+        }
+      } else {
+        log.error("LaunchForm: failed to store NFT in CMS", {
+          adminAddress,
+          error: convertResult.error,
+        });
+      }
+    } else {
+      onLaunch(launchData);
+    }
   };
 
   return (
@@ -270,14 +442,15 @@ export function LaunchForm({
                 <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
                   Collection
                 </label>
-                <select className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300">
+                <select
+                  className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
+                  onChange={(e) => selectCollection(e.target.value)}
+                  value={collectionAddress}
+                >
                   {collections.map((collection) => (
                     <option
                       key={collection.collectionAddress}
                       value={collection.collectionAddress}
-                      onClick={() =>
-                        setCollectionAddress(collection.collectionAddress)
-                      }
                     >
                       {collection.collectionName}
                     </option>
@@ -292,6 +465,29 @@ export function LaunchForm({
                   You don't have any collections yet. Please create a collection
                   first.
                 </p>
+              </div>
+            )}
+
+            {mintType === "nft" && nftData.length > 0 && (
+              <div className="mb-6">
+                <label className="mb-1 block font-display text-sm text-jacarta-700 dark:text-white">
+                  Saved NFTs
+                </label>
+                <select
+                  className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
+                  onChange={(e) => {
+                    const selectedNft = nftData.find(
+                      (nft) => nft.name === e.target.value
+                    );
+                    if (selectedNft) restoreSavedNFT(selectedNft);
+                  }}
+                >
+                  {nftData.map((nft) => (
+                    <option key={nft.name} value={nft.name}>
+                      {nft.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
@@ -493,21 +689,33 @@ export function LaunchForm({
 
                 {/* <Tippy content={launchTip}> */}
                 <button
-                  onClick={launchToken}
+                  onClick={() => launchToken({ storeInCMS: false })}
+                  disabled={buttonDisabled}
                   className={`rounded-full py-3 px-8 text-center font-semibold transition-all ${
-                    buttonDisabled && false // TODO: remove this in production
+                    buttonDisabled
                       ? "bg-jacarta-300 text-white cursor-not-allowed"
                       : "bg-accent text-white shadow-accent-volume hover:bg-accent-dark"
                   }`}
                 >
                   {addressValid
-                    ? buttonDisabled
-                      ? "Generate random data" // TODO: remove this in production
-                      : mintType === "collection"
+                    ? mintType === "collection"
                       ? "Launch NFT collection"
-                      : "MintNFT"
+                      : "Mint NFT"
                     : "Connect Wallet"}
                 </button>
+                {addressValid && mintType === "nft" && (
+                  <button
+                    onClick={() => launchToken({ storeInCMS: true })}
+                    disabled={buttonDisabled}
+                    className={`rounded-full ml-10 py-3 px-8 text-center font-semibold transition-all ${
+                      buttonDisabled
+                        ? "bg-jacarta-300 text-white cursor-not-allowed"
+                        : "bg-accent text-white shadow-accent-volume hover:bg-accent-dark"
+                    }`}
+                  >
+                    Save draft
+                  </button>
+                )}
               </>
             )}
             {/* </Tippy> */}
@@ -540,10 +748,13 @@ export function LaunchForm({
                       disabled={imageGenerating || imageError !== undefined}
                       className="rounded-full bg-accent py-1 px-6 text-center text-white shadow-accent-volume transition-all hover:bg-accent-dark text-sm"
                     >
-                      {imageGenerating ? "Generating..." : "Generate with AI"}
+                      {imageGenerating
+                        ? "Generating..."
+                        : "Generate image with AI"}
                     </button>
                   </div>
                 )}
+
                 {mintType === "collection" && (
                   <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
                     <FileUpload
@@ -555,6 +766,15 @@ export function LaunchForm({
                     />
                   </div>
                 )}
+
+                <div className="mb-6 flex space-x-5 md:pl-8 shrink-0">
+                  <button
+                    onClick={generateRandomData}
+                    className="rounded-full bg-accent py-1 px-6 text-center text-white shadow-accent-volume transition-all hover:bg-accent-dark text-sm"
+                  >
+                    Generate random data
+                  </button>
+                </div>
               </div>
             </>
           )}

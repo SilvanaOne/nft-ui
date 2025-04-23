@@ -1,8 +1,11 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AddressContext } from "@/context/address";
+import { useContext } from "react";
 
 export default function Nav() {
+  const { address, setAddress } = useContext(AddressContext);
   const pathname = usePathname();
   const isActiveParentMenu = (menus) => {
     return menus.some(
@@ -34,6 +37,28 @@ export default function Nav() {
           }  hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
         >
           Explore
+        </Link>
+      </li>
+
+      {address && (
+      <li className="group">
+          <Link
+            href={`/user/${address}`}
+            className={`flex items-center justify-between py-3.5 font-display text-base text-jacarta-700 dark:text-white
+          hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
+        >
+          My NFTs
+          </Link>
+        </li>
+      )}
+
+      <li className="group">
+          <Link
+            href={`/leaderboard`}
+            className={`flex items-center justify-between py-3.5 font-display text-base text-jacarta-700 dark:text-white
+          hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
+        >
+          Leaderboard
         </Link>
       </li>
 

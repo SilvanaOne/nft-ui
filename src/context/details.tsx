@@ -26,11 +26,18 @@ interface CollectionDetailsState {
   like: boolean;
 }
 
+interface UserDetailsState {
+  avatar?: { collectionAddress: string; tokenAddress: string };
+  nfts?: { collectionAddress: string; tokenAddress: string }[];
+  transactions?: TransactionData[];
+}
+
 interface TokenDetailsStates {
   nfts: {
     [collectionAddress: string]: { [tokenAddress: string]: NFTDetailsState };
   };
   collections: { [collectionAddress: string]: CollectionDetailsState };
+  users: { [userAddress: string]: UserDetailsState };
   likes: { [tokenAddress: string]: number };
   list: NftInfo[];
   favorites: string[];
@@ -134,6 +141,34 @@ type Action =
   | {
       type: "ADD_FAVORITE";
       payload: { tokenAddress: string };
+    }
+  | {
+      type: "SET_USER_AVATAR";
+      payload: {
+        userAddress: string;
+        avatar: { collectionAddress: string; tokenAddress: string };
+      };
+    }
+  | {
+      type: "SET_USER_NFTS";
+      payload: {
+        userAddress: string;
+        nfts: { collectionAddress: string; tokenAddress: string }[];
+      };
+    }
+  | {
+      type: "SET_USER_TRANSACTIONS";
+      payload: {
+        userAddress: string;
+        transactions: TransactionData[];
+      };
+    }
+  | {
+      type: "ADD_USER_TRANSACTIONS";
+      payload: {
+        userAddress: string;
+        transactions: TransactionData[];
+      };
     };
 
 const initialState: TokenDetailsStates = {
@@ -142,6 +177,7 @@ const initialState: TokenDetailsStates = {
   list: [],
   favorites: [],
   likes: {},
+  users: {},
 };
 
 const TokenDetailsContext = createContext<{
@@ -289,6 +325,60 @@ const tokenDetailsReducer = (
       return {
         ...state,
         list: action.payload.items,
+      };
+    case "SET_USER_AVATAR":
+      return {
+        ...state,
+        users: {
+          ...state.users,
+          [action.payload.userAddress]: {
+            ...state.users[action.payload.userAddress],
+            avatar: action.payload.avatar,
+          },
+        },
+      };
+    case "SET_USER_NFTS":
+      return {
+        ...state,
+        users: {
+          ...state.users,
+          [action.payload.userAddress]: {
+            ...state.users[action.payload.userAddress],
+            nfts: action.payload.nfts,
+          },
+        },
+      };
+    case "SET_USER_TRANSACTIONS":
+      return {
+        ...state,
+        users: {
+          ...state.users,
+          [action.payload.userAddress]: {
+            ...state.users[action.payload.userAddress],
+            transactions: action.payload.transactions,
+          },
+        },
+      };
+    case "ADD_USER_TRANSACTIONS":
+      return {
+        ...state,
+        users: {
+          ...state.users,
+          [action.payload.userAddress]: {
+            ...state.users[action.payload.userAddress],
+            transactions: [
+              ...(
+                state.users[action.payload.userAddress]?.transactions ?? []
+              ).filter(
+                (existingTx) =>
+                  !action.payload.transactions.some(
+                    (newTx) => newTx.hash === existingTx.hash
+                  )
+              ),
+              ...action.payload.transactions,
+            ],
+          },
+        },
       };
     default:
       return state;

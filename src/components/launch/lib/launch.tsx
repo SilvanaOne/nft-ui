@@ -57,7 +57,7 @@ async function startProcessUpdateRequests(
   }
 }
 
-async function readFileAsync(file: File): Promise<string> {
+export async function readFileAsync(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 

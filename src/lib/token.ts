@@ -46,20 +46,38 @@ export class NftPermissions {
   requireOwnerAuthorizationToUpgrade?: boolean;
   metadataVerificationKeyHash: string | undefined;
 
-  constructor() {
-    this.owner = undefined;
-    this.id = undefined;
-    this.canChangeOwnerByProof = false;
-    this.canTransfer = true;
-    this.canApprove = true;
-    this.canChangeMetadata = false;
-    this.canChangeStorage = false;
-    this.canChangeName = false;
-    this.canChangeMetadataVerificationKeyHash = false;
-    this.canPause = true;
-    this.isPaused = false;
-    this.requireOwnerAuthorizationToUpgrade = false;
-    this.metadataVerificationKeyHash = undefined;
+  constructor(
+    params: {
+      owner?: string;
+      id?: bigint | string;
+      canChangeOwnerByProof?: boolean;
+      canTransfer?: boolean;
+      canApprove?: boolean;
+      canChangeMetadata?: boolean;
+      canChangeStorage?: boolean;
+      canChangeName?: boolean;
+      canChangeMetadataVerificationKeyHash?: boolean;
+      canPause?: boolean;
+      isPaused?: boolean;
+      requireOwnerAuthorizationToUpgrade?: boolean;
+      metadataVerificationKeyHash?: string;
+    } = {}
+  ) {
+    this.owner = params.owner;
+    this.id = params.id;
+    this.canChangeOwnerByProof = params.canChangeOwnerByProof;
+    this.canTransfer = params.canTransfer;
+    this.canApprove = params.canApprove;
+    this.canChangeMetadata = params.canChangeMetadata;
+    this.canChangeStorage = params.canChangeStorage;
+    this.canChangeName = params.canChangeName;
+    this.canChangeMetadataVerificationKeyHash =
+      params.canChangeMetadataVerificationKeyHash;
+    this.canPause = params.canPause;
+    this.isPaused = params.isPaused;
+    this.requireOwnerAuthorizationToUpgrade =
+      params.requireOwnerAuthorizationToUpgrade;
+    this.metadataVerificationKeyHash = params.metadataVerificationKeyHash;
   }
 
   isEqual(other: NftPermissions): boolean {
@@ -135,6 +153,13 @@ export interface LaunchCollectionData {
   traits: Trait[];
   nftPermissions?: NftPermissions;
   collectionPermissions?: CollectionPermissions;
+}
+
+export interface LaunchNftData extends LaunchCollectionData {
+  mintType: "nft";
+  collectionAddress: string;
+  imageURL: string;
+  nftPermissions: NftPermissions;
 }
 
 export type TokenActionTransactionParams =

@@ -6,29 +6,45 @@ import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import Link from "next/link";
 
 const status = [
-  { id: 1, label: "Buy Now" },
-  { id: 2, label: "On Auction" },
+  { id: 1, label: "On Sale" },
+  // { id: 2, label: "On Auction" },
   { id: 3, label: "New" },
-  { id: 4, label: "Has Offers" },
+  // { id: 4, label: "Has Offers" },
 ];
 const currencies = ["MINA", "USD", "WETH"];
-// const categories = [
-//   "Art",
-//   "Collectibles",
-//   "Domain",
-//   "Music",
-//   "Photography",
-//   "Virtual World",
-// ];
 
 export default function Sidebar({
   collections,
   selectedCollection,
+  onSale,
+  newNFT,
+  minPrice,
+  maxPrice,
   setSelectedCollection,
+  setOnSale,
+  setNewNFT,
+  setMinPrice,
+  setMaxPrice,
+  setPriceRange,
 }: {
   collections: CollectionInfo[];
   selectedCollection: string | undefined;
+  onSale: boolean;
+  newNFT: boolean;
+  minPrice: number | undefined;
+  maxPrice: number | undefined;
   setSelectedCollection: (collection: string | undefined) => void;
+  setOnSale: (onSale: boolean) => void;
+  setNewNFT: (newNFT: boolean) => void;
+  setMinPrice: (minPrice: number | undefined) => void;
+  setMaxPrice: (maxPrice: number | undefined) => void;
+  setPriceRange: ({
+    minPrice,
+    maxPrice,
+  }: {
+    minPrice?: number;
+    maxPrice?: number;
+  }) => void;
 }) {
   const [currency, setCurrency] = useState(currencies[0]);
   const [sideBarSelectedCollection, setSideBarSelectedCollection] = useState<
@@ -217,7 +233,7 @@ export default function Sidebar({
         </h2>
         <div
           id="filters-status"
-          className="mt-3 collapse visible"
+          className="mt-3 visible"
           aria-labelledby="filters-status-heading"
         >
           <ul className="space-y-6 mb-8">
@@ -226,6 +242,14 @@ export default function Sidebar({
                 <label className="flex items-center cursor-pointer w-full">
                   <input
                     type="checkbox"
+                    checked={elm.id === 1 ? onSale : newNFT}
+                    onChange={() => {
+                      if (elm.id === 1) {
+                        setOnSale(!onSale);
+                      } else {
+                        setNewNFT(!newNFT);
+                      }
+                    }}
                     id="terms"
                     className="h-5 w-5 mr-2 rounded border-jacarta-200 text-accent checked:bg-accent focus:ring-accent/20 focus:ring-offset-0 dark:border-jacarta-500 dark:bg-jacarta-600"
                   />
@@ -266,7 +290,7 @@ export default function Sidebar({
           className="mt-3 mb-8 space-y-4 collapse show visible"
           aria-labelledby="filters-price-heading"
         >
-          <div className="dropdown relative cursor-pointer">
+          {/* <div className="dropdown relative cursor-pointer">
             <div
               className="dropdown-toggle flex items-center justify-between rounded-lg border border-jacarta-100 bg-white w-full h-12 py-3 px-4 dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white"
               role="button"
@@ -314,23 +338,40 @@ export default function Sidebar({
               ))}
             </div>
           </div>
-
+ */}
           <div className="flex space-x-4">
             <input
               className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
               type="text"
               placeholder="Min"
+              value={minPrice}
+              onChange={(e) => {
+                const value =
+                  e.target.value.length > 0
+                    ? Number(e.target.value)
+                    : undefined;
+                setMinPrice(!value || isNaN(value) ? undefined : value);
+              }}
             />
             <input
               className="w-full rounded-lg border-jacarta-100 py-3 hover:ring-2 hover:ring-accent/10 focus:ring-accent dark:border-jacarta-600 dark:bg-jacarta-700 dark:text-white dark:placeholder:text-jacarta-300"
               type="text"
               placeholder="Max"
+              value={maxPrice}
+              onChange={(e) => {
+                const value =
+                  e.target.value.length > 0
+                    ? Number(e.target.value)
+                    : undefined;
+                setMaxPrice(!value || isNaN(value) ? undefined : value);
+              }}
             />
           </div>
 
           <button
             type="submit"
-            className="rounded-full bg-accent-lighter w-full py-3 px-8 text-center font-semibold text-white transition-all hover:bg-accent-dark"
+            onClick={() => setPriceRange({ minPrice, maxPrice })}
+            className="rounded-full bg-accent-lighter w-full py-2 px-8 text-center font-semibold text-white transition-all hover:bg-accent-dark"
           >
             Apply
           </button>

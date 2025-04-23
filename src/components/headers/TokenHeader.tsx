@@ -308,7 +308,7 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
                 <div className=" text-jacarta-900 dark:text-white cursor-pointer  js-dark-mode-trigger  group ml-2 mr-6 flex items-center justify-center  transition-colors">
                   {address && (
                     <a
-                      href={`${explorerAccountUrl()}${address}`}
+                      href={`/user/${address}`}
                       className="dark:hover:text-accent hover:text-accent"
                       target="_blank"
                       rel="noopener noreferrer"
