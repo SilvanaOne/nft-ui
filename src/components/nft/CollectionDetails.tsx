@@ -2,7 +2,10 @@
 import { useTokenDetails } from "@/context/details";
 import Image from "next/image";
 import Link from "next/link";
-import { algoliaGetCollection } from "@/lib/search";
+import {
+  algoliaGetCollection,
+  algoliaGetCollectionHolders,
+} from "@/lib/search";
 import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import React, { useEffect, useState, useContext } from "react";
 import { SearchContext } from "@/context/search";
@@ -58,6 +61,8 @@ export default function CollectionDetails({
 }: ItemDetailsProps) {
   const { state, dispatch } = useTokenDetails();
   const collectionDetails = state.collections[collectionAddress] || {};
+  const transactions = collectionDetails.transactions;
+  const holders = collectionDetails.holders;
   const item = collectionDetails.info;
   const likes = collectionDetails.likes || 0;
   const like = collectionDetails.like;
@@ -71,11 +76,9 @@ export default function CollectionDetails({
   const addFavorite = (tokenAddress: string) =>
     dispatch({ type: "ADD_FAVORITE", payload: { tokenAddress } });
 
-  const holders = collectionDetails.holders;
   const setHolders = (holders: TokenHolder[]) =>
     dispatch({ type: "SET_HOLDERS", payload: { collectionAddress, holders } });
 
-  const transactions = collectionDetails.transactions;
   const setTransactions = (transactions: TransactionData[]) =>
     dispatch({
       type: "SET_COLLECTION_TRANSACTIONS",
@@ -143,36 +146,41 @@ export default function CollectionDetails({
 
   useEffect(() => {
     const fetchHolders = async () => {
-      if (item?.tokenId) {
-        const holdersData = await getTokenHolders({
+      if (collectionAddress) {
+        const holdersData = await algoliaGetCollectionHolders({
           collectionAddress,
         });
-        if (holdersData.success) {
-          const filteredHolders = holdersData.tokenHolders.filter(
-            (holder) => holder.address !== collectionAddress
-          );
-          setHolders(filteredHolders);
-          if (DEBUG) console.log("holders", filteredHolders);
-        }
+
+        setHolders(
+          holdersData.map((holder) => ({
+            address: holder.ownerAddress,
+            balance: holder.numberOfNFTs,
+            percentage: 0,
+            isZkappAccount: false,
+          }))
+        );
+        if (DEBUG) console.log("holders", holdersData);
       }
     };
     fetchHolders();
-  }, [item]);
+  }, [collectionAddress]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (item?.tokenId) {
+      if (collectionAddress) {
         const transactionsData = await getTransactions({
           collectionAddress,
         });
         if (transactionsData.success) {
           setTransactions(transactionsData.transactions);
           if (DEBUG) console.log("transactions", transactionsData.transactions);
+        } else {
+          if (DEBUG) console.log("transactions error", transactionsData.error);
         }
       }
     };
     fetchTransactions();
-  }, [item]);
+  }, [collectionAddress]);
 
   function isNotEmpty(value: string | undefined) {
     return value && value.length > 0;
@@ -184,7 +192,18 @@ export default function CollectionDetails({
         <Banner image={item?.banner} />
       )}
       {item && <Profile item={item.masterNFT} />}
-      {item && <Collection item={item} />}
+      {item && (
+        <Collection
+          item={item}
+          transactions={transactions}
+          holders={holders?.map((holder) => ({
+            ...holder,
+            balance:
+              holder.balance -
+              (item?.masterNFT?.owner === holder.address ? 1 : 0),
+          }))}
+        />
+      )}
     </>
   );
 }
