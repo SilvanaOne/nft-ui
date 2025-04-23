@@ -60,39 +60,37 @@ export async function algoliaGetCollectionList(
   return tokenList?.hits ?? [];
 }
 
-// export async function algoliaGetCollectionList(params: {
-//   creator?: string;
-// }): Promise<DeployedTokenInfo[]> {
-//   const { creator } = params;
-//   console.time("facets");
-//   const result = await client.searchForFacetValues({
-//     indexName,
-//     facetName: "collectionAddress",
-//   });
-//   console.timeEnd("facets");
-//   //console.log("collections", result);
-//   if (!result?.facetHits || result.facetHits.length === 0) return [];
+export async function algoliaGetCollectionLeaderBoard(): Promise<
+  { collectionAddress: string; minted: number }[]
+> {
+  console.time("facets");
+  const result = await client.searchForFacetValues({
+    indexName,
+    facetName: "collectionAddress",
+  });
+  console.timeEnd("facets");
+  if (!result?.facetHits || result.facetHits.length === 0) return [];
+  return result.facetHits.map((collection) => ({
+    collectionAddress: collection.value,
+    minted: collection.count - 1,
+  }));
+}
 
-//   console.time("collections");
-//   const data = await client.getObjects({
-//     requests: result.facetHits.map((collection) => ({
-//       indexName,
-//       objectID: collection.value,
-//     })),
-//   });
-//   const collections: DeployedTokenInfo[] = data.results.map((collection) => {
-//     return {
-//       ...(collection as unknown as CollectionDataSerialized),
-//       minted:
-//         result?.facetHits?.find(
-//           (facet: any) => facet.value === (collection as any)?.address
-//         )?.count ?? 1 - 1,
-//     };
-//   });
-//   console.timeEnd("collections");
-
-//   return collections;
-// }
+export async function algoliaGetUsersLeaderBoard(): Promise<
+  { userAddress: string; owned: number }[]
+> {
+  console.time("facets");
+  const result = await client.searchForFacetValues({
+    indexName,
+    facetName: "owner",
+  });
+  console.timeEnd("facets");
+  if (!result?.facetHits || result.facetHits.length === 0) return [];
+  return result.facetHits.map((user) => ({
+    userAddress: user.value,
+    owned: user.count,
+  }));
+}
 
 export async function algoliaGetCollection(params: {
   collectionAddress: string;

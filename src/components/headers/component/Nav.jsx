@@ -53,6 +53,16 @@ export default function Nav() {
       )}
 
       <li className="group">
+          <Link
+            href={`/leaderboard`}
+            className={`flex items-center justify-between py-3.5 font-display text-base text-jacarta-700 dark:text-white
+          hover:text-accent focus:text-accent dark:hover:text-accent dark:focus:text-accent lg:px-5`}
+        >
+          Leaderboard
+        </Link>
+      </li>
+
+      <li className="group">
         <Link
           href={"https://docs.minanft.io"}
           target="_blank"
