@@ -32,6 +32,9 @@ import {
   TokenHolder,
   TxStatus,
   TxStatusData,
+  cmsStoreNft,
+  cmsReadNft,
+  CmsnftData,
 } from "@silvana-one/api";
 import { getChain } from "./chain";
 
@@ -530,6 +533,48 @@ export async function getTransactions(params: {
   }
 }
 
+export async function getUserTransactions(params: {
+  collectionAddresses: string[];
+  userAddress: string;
+}): Promise<
+  | {
+      success: true;
+      transactions: TransactionData[];
+    }
+  | {
+      success: false;
+      error?: string;
+    }
+> {
+  const { collectionAddresses, userAddress } = params;
+  try {
+    const transactions: TransactionData[] = [];
+    const uniqueCollectionAddresses = new Set(collectionAddresses);
+    const uniqueAddressesArray = Array.from(uniqueCollectionAddresses);
+    for (const collectionAddress of uniqueAddressesArray) {
+      try {
+        const reply = (
+          await getTransactionsApi({
+            body: { tokenAddress: collectionAddress, address: userAddress },
+          })
+        ).data;
+        if (reply && reply.transactions && Array.isArray(reply.transactions)) {
+          transactions.push(...reply.transactions);
+        }
+      } catch (error: any) {
+        console.error("getUserTransactions", error?.message);
+      }
+    }
+    return {
+      success: true,
+      transactions,
+    };
+  } catch (error: any) {
+    console.error("getUserTransactions", error?.message);
+    return { success: false, error: "Error getting transactions" };
+  }
+}
+
 export async function getTokenHolders(params: {
   collectionAddress: string;
 }): Promise<
@@ -557,5 +602,70 @@ export async function getTokenHolders(params: {
   } catch (error) {
     console.error(error);
     return { success: false, error: "Error getting token holders" };
+  }
+}
+
+export async function storeNft(params: {
+  nft: CmsnftData;
+  signature: string;
+}): Promise<
+  | {
+      success: true;
+    }
+  | {
+      success: false;
+      error?: string;
+    }
+> {
+  const { nft, signature } = params;
+  try {
+    const reply = (
+      await cmsStoreNft({
+        body: { nft, signature },
+      })
+    ).data;
+    if (!reply || !reply.success)
+      return { success: false, error: "Error storing NFT" };
+
+    return {
+      success: true,
+    };
+  } catch (error: any) {
+    console.error(error);
+    return { success: false, error: "Error while storing NFT" };
+  }
+}
+
+export async function readNft(params: {
+  collectionAddress: string;
+  nftName?: string;
+  signature?: string;
+}): Promise<
+  | {
+      success: true;
+      nfts: CmsnftData[];
+    }
+  | {
+      success: false;
+      error?: string;
+    }
+> {
+  const { collectionAddress, nftName, signature } = params;
+  try {
+    const reply = (
+      await cmsReadNft({
+        body: { collectionAddress, nftName, signature },
+      })
+    ).data;
+    if (!reply || !reply.nfts)
+      return { success: false, error: "Error reading NFTs" };
+
+    return {
+      success: true,
+      nfts: reply.nfts,
+    };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Error while reading NFTs" };
   }
 }

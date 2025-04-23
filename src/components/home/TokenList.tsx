@@ -20,26 +20,6 @@ import { useTokenDetails } from "@/context/details";
 import { CollectionInfo, NftInfo } from "@silvana-one/api";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
-/*
-interface Item {
-  id: number;
-  imageSrc: string;
-  title: string;
-  likes: number;
-  creatorAvatar: string;
-  ownerAvatar: string;
-  price: number;
-  category: string;
-  creator: string;
-  owner: string;
-  bidCount: string;
-  NFSW: boolean;
-  LazyMinted: boolean;
-  liked?: boolean;
-  varified?: boolean;
-}
-  */
-
 type categoriesTypes = "issued" | "owned" | "favorites";
 interface Category {
   id: categoriesTypes;
@@ -80,7 +60,9 @@ export type TokenListProps = {
   showIcon: boolean;
   initialNumberOfItems?: number;
   hideSidebar?: boolean;
+  hideFilters?: boolean;
   collectionAddress?: string;
+  nfts?: NftInfo[];
 };
 
 const numberOfItemsOptions = [20, 50, 100];
@@ -91,12 +73,14 @@ export default function TokenList({
   showIcon,
   initialNumberOfItems,
   hideSidebar,
+  hideFilters = false,
   collectionAddress,
+  nfts,
 }: TokenListProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const { state, dispatch } = useTokenDetails();
-  const [itemsToDisplay, setItemsToDisplay] = useState<NftInfo[]>([]);
+  const [itemsToDisplay, setItemsToDisplay] = useState<NftInfo[]>(nfts ?? []);
   const [collections, setCollections] = useState<CollectionInfo[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -109,6 +93,14 @@ export default function TokenList({
   >(undefined);
   const { search } = useContext(SearchContext);
   const { address, setAddress } = useContext(AddressContext);
+  const [onSale, setOnSale] = useState<boolean>(false);
+  const [newNFT, setNewNFT] = useState<boolean>(false);
+  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
+  const [priceRange, setPriceRange] = useState<{
+    minPrice?: number;
+    maxPrice?: number;
+  }>({ minPrice: undefined, maxPrice: undefined });
 
   function setListSelectedCollection(collection: string | undefined) {
     setSelectedCollection(collection);
@@ -128,9 +120,6 @@ export default function TokenList({
       : numberOfItemsOptions;
 
   useEffect(() => {
-    console.log("categories", categories);
-    console.log("state.list", state.list);
-    console.log("state.favorites", state.favorites);
     // const filtered = categories[categoriesIndexes.favorites].selected
     //   ? state.list.filter((item) =>
     //       state.favorites.includes(item.collectionAddress)
@@ -155,14 +144,8 @@ export default function TokenList({
       const bTime = b.updated || b.created || 0;
       return bTime - aTime; // Most recent first
     });
-    setItemsToDisplay(sortedByPriceAndTime);
+    if (!nfts) setItemsToDisplay(sortedByPriceAndTime);
   }, [categories, state.list, state.favorites, numberOfItems]);
-
-  // const setItem = (info: DeployedTokenInfo) =>
-  //   dispatch({
-  //     type: "SET_TOKEN_INFO",
-  //     payload: { tokenAddress: info.tokenAddress, info },
-  //   });
 
   const setItems = (items: NftInfo[]) =>
     dispatch({
@@ -181,24 +164,6 @@ export default function TokenList({
       type: "ADD_FAVORITE",
       payload: { tokenAddress },
     });
-
-  // const setBid = (tokenAddress: string, bid: Order) =>
-  //   dispatch({
-  //     type: "SET_BID",
-  //     payload: { tokenAddress, bid },
-  //   });
-
-  // const setOffer = (tokenAddress: string, offer: Order) =>
-  //   dispatch({
-  //     type: "SET_OFFER",
-  //     payload: { tokenAddress, offer },
-  //   });
-
-  // const setIsPriceLoaded = (tokenAddress: string, isPriceLoaded: boolean) =>
-  //   dispatch({
-  //     type: "SET_IS_PRICE_LOADED",
-  //     payload: { tokenAddress, isPriceLoaded },
-  //   });
 
   const setLikes = (
     likes: { collectionAddress: string; tokenAddress: string; likes: number }[]
@@ -269,6 +234,11 @@ export default function TokenList({
         ownedByAddress: onlyOwned ? userAddress : undefined,
         issuedByAddress: onlyIssued ? userAddress : undefined,
         collectionAddress: selectedCollection,
+        minPrice: priceRange.minPrice ?? (onSale ? 0.0001 : undefined),
+        maxPrice: priceRange.maxPrice,
+        createdLaterThan: newNFT
+          ? Date.now() - 1000 * 60 * 60 * 24 * 7
+          : undefined,
       });
       console.log("searchResult", searchResult);
 
@@ -284,7 +254,7 @@ export default function TokenList({
           newItems,
         });
     };
-    fetchTokenList();
+    if (!nfts) fetchTokenList();
   }, [
     categories,
     numberOfItems,
@@ -292,58 +262,10 @@ export default function TokenList({
     search,
     refreshCounter,
     selectedCollection,
+    onSale,
+    newNFT,
+    priceRange,
   ]);
-
-  // useEffect(() => {
-  //   const fetchTokenState = async () => {
-  //     const tokensToFetch: DeployedTokenInfo[] = [];
-  //     for (const item of state.list) {
-  //       if (!state.tokens[item.tokenAddress]?.tokenState === undefined)
-  //         tokensToFetch.push(item);
-  //     }
-  //     for (const token of tokensToFetch) {
-  //       const state = await getTokenState({
-  //         tokenAddress: token.tokenAddress,
-  //         info: token,
-  //       });
-  //       if (state.success) {
-  //         if (DEBUG) console.log("fetchTokenState", token.tokenAddress);
-  //         setTokenState(state.tokenState);
-  //       }
-  //     }
-  //   };
-  //   fetchTokenState();
-  // }, [state.list]);
-
-  // useEffect(() => {
-  //   const fetchLikes = async () => {
-  //     const addresses = state.list
-  //       .filter((item) => state.likes[item.tokenAddress] === undefined)
-  //       .map((item) => item.tokenAddress);
-  //     if (addresses.length === 0) return;
-  //     const newLikes = await batchLikesCounts({
-  //       tokens: addresses.map((address) => ({
-  //         address,
-  //       })),
-  //     });
-  //     setLikes(
-  //       newLikes.map((like) => ({
-  //         tokenAddress: like.address,
-  //         likes: like.likes,
-  //       }))
-  //     );
-  //   };
-  //   fetchLikes();
-  // }, [state.list]);
-
-  // useEffect(() => {
-  //   const fetchFavorites = async () => {
-  //     if (!address) return;
-  //     const newFavorites = await getUsersLikes({ userAddress: address });
-  //     setFavorites(newFavorites.map((favorite) => favorite.tokenAddress));
-  //   };
-  //   fetchFavorites();
-  // }, [address]);
 
   useEffect(() => {
     const fetchCollections = async () => {
@@ -357,7 +279,7 @@ export default function TokenList({
   return (
     <>
       {isAvailable && (
-        <section className={`${collectionAddress ? "" : "py-32"}`}>
+        <section className={`${collectionAddress || nfts ? "" : "py-32"}`}>
           <div className="ml-20 mr-20">
             {title && (
               <h2 className="mb-8 text-center font-display text-5xl text-jacarta-700 dark:text-white">
@@ -374,73 +296,79 @@ export default function TokenList({
               </h2>
             )}
             {hideSidebar !== true && (
-              <div className="mb-8 flex flex-wrap items-center justify-between">
-                <ul className="flex flex-wrap items-center">
-                  <li className="my-1 mr-2.5">
-                    <div
-                      onClick={() => setCategories(initialCategories)}
-                      className={`  ${
-                        categories.every(
-                          (category) => category.selected === false
-                        )
-                          ? "bg-jacarta-100"
-                          : "bg-white"
-                      }  ${
-                        categories.every(
-                          (category) => category.selected === false
-                        )
-                          ? "dark:bg-jacarta-600"
-                          : "dark:bg-jacarta-900"
-                      } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
-                    >
-                      All
-                    </div>
-                  </li>
-                  {categories.map((elm, i) => (
-                    <li
-                      onClick={() =>
-                        setCategories((prev) => {
-                          const newCategories = prev.map((category, index) => {
-                            if (index === i) {
-                              return {
-                                ...category,
-                                selected: !category.selected,
-                              };
-                            }
-                            return category;
-                          });
-                          if (DEBUG)
-                            console.log("New categories", newCategories);
-                          return newCategories;
-                        })
-                      }
-                      key={i}
-                      className="my-1 mr-2.5"
-                    >
+              <div className="mb-8 flex flex-wrap items-center justify-end">
+                {hideFilters !== true && (
+                  <ul className="flex flex-wrap items-center">
+                    <li className="my-1 mr-2.5">
                       <div
+                        onClick={() => setCategories(initialCategories)}
                         className={`  ${
-                          categories[i].selected ? "bg-jacarta-100" : "bg-white"
+                          categories.every(
+                            (category) => category.selected === false
+                          )
+                            ? "bg-jacarta-100"
+                            : "bg-white"
                         }  ${
-                          categories[i].selected
+                          categories.every(
+                            (category) => category.selected === false
+                          )
                             ? "dark:bg-jacarta-600"
                             : "dark:bg-jacarta-900"
                         } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 25 28"
-                          width="24"
-                          height="24"
-                          className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
-                        >
-                          <path fill="none" d="M0 0h24v24H0z" />
-                          <path d={elm.icon} />
-                        </svg>
-                        <span>{elm.name}</span>
+                        All
                       </div>
                     </li>
-                  ))}
-                </ul>
+                    {categories.map((elm, i) => (
+                      <li
+                        onClick={() =>
+                          setCategories((prev) => {
+                            const newCategories = prev.map(
+                              (category, index) => {
+                                if (index === i) {
+                                  return {
+                                    ...category,
+                                    selected: !category.selected,
+                                  };
+                                }
+                                return category;
+                              }
+                            );
+                            if (DEBUG)
+                              console.log("New categories", newCategories);
+                            return newCategories;
+                          })
+                        }
+                        key={i}
+                        className="my-1 mr-2.5"
+                      >
+                        <div
+                          className={`  ${
+                            categories[i].selected
+                              ? "bg-jacarta-100"
+                              : "bg-white"
+                          }  ${
+                            categories[i].selected
+                              ? "dark:bg-jacarta-600"
+                              : "dark:bg-jacarta-900"
+                          } cursor-pointer group flex h-9 items-center rounded-lg border border-jacarta-100  px-4 font-display text-sm font-semibold text-jacarta-500 transition-colors hover:border-transparent hover:bg-accent hover:text-white dark:border-jacarta-600  dark:text-white dark:hover:border-transparent dark:hover:bg-accent dark:hover:text-white`}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 25 28"
+                            width="24"
+                            height="24"
+                            className="mr-1 h-4 w-4 fill-jacarta-700 transition-colors group-hover:fill-white dark:fill-jacarta-100"
+                          >
+                            <path fill="none" d="M0 0h24v24H0z" />
+                            <path d={elm.icon} />
+                          </svg>
+                          <span>{elm.name}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className="flex items-center gap-2 my-1">
                   <button
                     onClick={() => setRefreshCounter(refreshCounter + 1)}
@@ -524,6 +452,15 @@ export default function TokenList({
                   collections={collections}
                   selectedCollection={selectedCollection}
                   setSelectedCollection={setListSelectedCollection}
+                  onSale={onSale}
+                  newNFT={newNFT}
+                  minPrice={minPrice}
+                  maxPrice={maxPrice}
+                  setOnSale={setOnSale}
+                  setNewNFT={setNewNFT}
+                  setMinPrice={setMinPrice}
+                  setMaxPrice={setMaxPrice}
+                  setPriceRange={setPriceRange}
                 />
               )}
               {/* end sidebar */}

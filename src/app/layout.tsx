@@ -5,6 +5,7 @@ import "swiper/css";
 // import "swiper/css/pagination";
 // import "tippy.js/dist/tippy.css";
 //import "react-modal-video/css/modal-video.css";
+import "react-toastify/dist/ReactToastify.css";
 import TokenHeader from "@/components/headers/TokenHeader";
 import { usePathname } from "next/navigation";
 import { MintAddressesModal } from "@/components/modals/MintAddressesModal";
@@ -20,6 +21,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import Script from "next/script";
+import { ToastContainer } from "react-toastify";
 
 if (typeof window !== "undefined") {
   // Import the script only on the client side
@@ -68,6 +70,21 @@ export default function RootLayout({
                     <PermissionsModal
                       onSubmit={() => {}}
                       mintType={"collection"}
+                    />
+                    <ToastContainer
+                      position="top-center"
+                      autoClose={5000}
+                      hideProgressBar={false}
+                      newestOnTop={true}
+                      closeOnClick
+                      rtl={false}
+                      pauseOnFocusLoss
+                      draggable
+                      pauseOnHover
+                      theme="dark"
+                      toastClassName="dark:bg-jacarta-700 bg-white text-jacarta-700 dark:text-white font-body rounded-lg"
+                      className="font-body"
+                      progressClassName="bg-accent"
                     />
                   </TransactionStoreProvider>
                 </TokenDetailsProvider>

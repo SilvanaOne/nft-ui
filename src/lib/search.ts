@@ -148,134 +148,41 @@ export async function algoliaGetNFTs(params: {
   query?: string;
   hitsPerPage?: number;
   page?: number;
-  onlyFavorites: boolean;
-  favorites: string[];
+  onlyFavorites?: boolean;
+  favorites?: string[];
   issuedByAddress?: string;
   ownedByAddress?: string;
-  collectionAddress: string | undefined;
+  collectionAddress?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  createdLaterThan?: number;
 }): Promise<AlgoliaNFTList | undefined> {
   //console.log("algoliaGetTokenList", params);
   const {
     onlyFavorites,
-    favorites,
+    favorites = [],
     issuedByAddress,
     ownedByAddress,
     collectionAddress,
+    minPrice,
+    maxPrice,
+    createdLaterThan,
   } = params;
 
   const query = params.query ?? "";
   const hitsPerPage = params.hitsPerPage ?? 100;
   const page = params.page ?? 0;
-  //if (DEBUG) console.log("algoliaGetTokenList", params);
-
-  //const likesIndexName = `token-likes-${chain}`;
-
-  // const result = await client.searchForFacetValues({
-  //   indexName,
-  //   facetName: "collectionName",
-  // });
-  // console.log("result", result);
 
   try {
     let tokenList: AlgoliaNFTList | undefined = undefined;
 
-    // if (onlyFavorites && issuedByAddress !== undefined) {
-    //   if (favorites.length > 0) {
-    //     const filters = favorites
-    //       .map((tokenAddress) => `tokenAddress:${tokenAddress}`)
-    //       .join(" OR ");
-
-    //     const result = await client.searchSingleIndex({
-    //       indexName,
-    //       searchParams: {
-    //         query,
-    //         hitsPerPage: 1000,
-    //         page: 0,
-    //         facetFilters: [`adminAddress:${issuedByAddress}`, `status:created`],
-    //         filters,
-    //       },
-    //     });
-    //     tokenList = result?.hits
-    //       ? (result as unknown as AlgoliaTokenList)
-    //       : undefined;
-    //     if (ownedByAddress && tokenList?.hits !== undefined) {
-    //       const blockberryTokenIdsList = await listFromBlockberryTokens(
-    //         blockberryTokensPromise
-    //       );
-    //       tokenList.hits = tokenList.hits.filter((token) =>
-    //         blockberryTokenIdsList.includes(token.tokenId)
-    //       );
-    //     }
-    //   }
-    // } else if (onlyFavorites) {
-    //   if (favorites.length > 0) {
-    //     const filters = favorites
-    //       .map((tokenAddress) => `tokenAddress:${tokenAddress}`)
-    //       .join(" OR ");
-    //     console.time("favorites");
-    //     const result = await client.searchSingleIndex({
-    //       indexName,
-    //       searchParams: {
-    //         query,
-    //         hitsPerPage: ownedByAddress ? 1000 : hitsPerPage,
-    //         page: ownedByAddress ? 0 : page,
-    //         filters: favorites.length > 0 ? filters : undefined,
-    //         facetFilters: [`status:created`],
-    //       },
-    //     });
-    //     console.timeEnd("favorites");
-    //     tokenList = result?.hits
-    //       ? (result as unknown as AlgoliaTokenList)
-    //       : undefined;
-    //     if (ownedByAddress && tokenList?.hits !== undefined) {
-    //       const blockberryTokenIdsList = await listFromBlockberryTokens(
-    //         blockberryTokensPromise
-    //       );
-    //       tokenList.hits = tokenList.hits.filter((token) =>
-    //         blockberryTokenIdsList.includes(token.tokenId)
-    //       );
-    //     }
-    //   }
-    // } else if (issuedByAddress !== undefined) {
-    //   const result = await client.searchSingleIndex({
-    //     indexName,
-    //     searchParams: {
-    //       query,
-    //       hitsPerPage: ownedByAddress ? 1000 : hitsPerPage,
-    //       page: ownedByAddress ? 0 : page,
-    //       facetFilters: [`adminAddress:${issuedByAddress}`, `status:created`],
-    //     },
-    //   });
-    //   tokenList = result?.hits
-    //     ? (result as unknown as AlgoliaTokenList)
-    //     : undefined;
-    //   if (ownedByAddress && tokenList?.hits !== undefined) {
-    //     const blockberryTokenIdsList = await listFromBlockberryTokens(
-    //       blockberryTokensPromise
-    //     );
-    //     tokenList.hits = tokenList.hits.filter((token) =>
-    //       blockberryTokenIdsList.includes(token.tokenId)
-    //     );
-    //   }
-    // } else if (ownedByAddress !== undefined) {
-    //   const filters = await filterFromBlockberryTokens(blockberryTokensPromise);
-    //   if (filters !== undefined) {
-    //     const result = await client.searchSingleIndex({
-    //       indexName,
-    //       searchParams: {
-    //         query,
-    //         hitsPerPage,
-    //         page,
-    //         filters,
-    //         facetFilters: [`status:created`],
-    //       },
-    //     });
-    //     tokenList = result?.hits
-    //       ? (result as unknown as AlgoliaTokenList)
-    //       : undefined;
-    //   }
-    // } else {
     console.time("algolia nft");
+    let numericFilters = [];
+    if (minPrice !== undefined) numericFilters.push(`price >= ${minPrice}`);
+    if (maxPrice !== undefined) numericFilters.push(`price <= ${maxPrice}`);
+    if (createdLaterThan !== undefined)
+      numericFilters.push(`created > ${createdLaterThan}`);
+
     const result = await client.searchSingleIndex({
       indexName,
       searchParams: {
@@ -289,6 +196,7 @@ export async function algoliaGetNFTs(params: {
               "contractType:nft",
             ]
           : ["status:created", "contractType:nft"],
+        numericFilters: numericFilters.length > 0 ? numericFilters : undefined,
       },
     });
     console.timeEnd("algolia nft");

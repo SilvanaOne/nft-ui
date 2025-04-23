@@ -18,6 +18,7 @@ const HomeToken: FC = () => {
           showIcon={true}
           initialNumberOfItems={50}
           key="home-list"
+          hideFilters={true}
         />
       </main>
       <TokenFooter />
