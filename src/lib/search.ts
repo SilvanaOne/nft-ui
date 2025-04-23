@@ -76,6 +76,35 @@ export async function algoliaGetCollectionLeaderBoard(): Promise<
   }));
 }
 
+export async function algoliaGetCollectionHolders({
+  collectionAddress,
+}: {
+  collectionAddress: string;
+}): Promise<{ ownerAddress: string; numberOfNFTs: number }[]> {
+  console.time("facets");
+  // First get NFTs in the collection
+  const nftsResult = await client.searchSingleIndex({
+    indexName,
+    searchParams: {
+      query: "",
+      hitsPerPage: 0,
+      facetFilters: [
+        `collectionAddress:${collectionAddress}`,
+        "contractType:nft",
+      ],
+      facets: ["owner"],
+    },
+  });
+
+  const facets = nftsResult?.facets?.owner || {};
+  console.timeEnd("facets");
+
+  return Object.entries(facets).map(([owner, count]) => ({
+    ownerAddress: owner,
+    numberOfNFTs: count,
+  }));
+}
+
 export async function algoliaGetUsersLeaderBoard(): Promise<
   { userAddress: string; owned: number }[]
 > {
@@ -175,11 +204,16 @@ export async function algoliaGetNFTs(params: {
     let tokenList: AlgoliaNFTList | undefined = undefined;
 
     console.time("algolia nft");
-    let numericFilters = [];
+    const numericFilters = [];
     if (minPrice !== undefined) numericFilters.push(`price >= ${minPrice}`);
     if (maxPrice !== undefined) numericFilters.push(`price <= ${maxPrice}`);
     if (createdLaterThan !== undefined)
       numericFilters.push(`created > ${createdLaterThan}`);
+
+    const facetFilters = ["status:created", "contractType:nft"];
+    if (collectionAddress)
+      facetFilters.push(`collectionAddress:${collectionAddress}`);
+    if (ownedByAddress) facetFilters.push(`owner:${ownedByAddress}`);
 
     const result = await client.searchSingleIndex({
       indexName,
@@ -187,13 +221,7 @@ export async function algoliaGetNFTs(params: {
         query,
         hitsPerPage,
         page,
-        facetFilters: collectionAddress
-          ? [
-              `collectionAddress:${collectionAddress}`,
-              `status:created`,
-              "contractType:nft",
-            ]
-          : ["status:created", "contractType:nft"],
+        facetFilters,
         numericFilters: numericFilters.length > 0 ? numericFilters : undefined,
       },
     });

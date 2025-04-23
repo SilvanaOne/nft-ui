@@ -24,12 +24,6 @@ import UserNfts from "./UserNFTs";
 import { getNFTInfo } from "@/lib/api";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
-function formatBalance(num: number | undefined): string {
-  if (num === undefined) return "-";
-  const fixed = num.toFixed(2);
-  return fixed.endsWith(".00") ? fixed.slice(0, -3) : fixed;
-}
-
 export function Socials({ i }: { i: number }) {
   const elm = socials_item[i];
   return (
@@ -200,7 +194,7 @@ export default function UserDetails({ userAddress }: ItemDetailsProps) {
     fetchTransactions();
   }, [userAddress, nfts]);
 
-  console.log("user transactions", transactions?.length);
+  if (DEBUG) console.log("user transactions", transactions?.length);
 
   return (
     <div className="relative py-28">
