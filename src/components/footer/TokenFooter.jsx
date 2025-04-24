@@ -31,7 +31,7 @@ export default function TokenFooter() {
                   alt="MinaTokens.com"
                 />
               </span>
-              <span className="ms-4 text-white text-lg inline-block">
+              <span className="ms-4 text-jacarta-900 dark:text-white text-lg inline-block font-bold">
                 {getSiteName()}
               </span>
             </Link>
