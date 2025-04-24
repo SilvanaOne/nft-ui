@@ -98,14 +98,14 @@ const TokenHeader: React.FC<TokenHeaderProps> = ({
                 className="hidden dark:block"
                 alt="NFT Standard"
               />
-              <div className="text-jacarta-900 dark:text-white ml-3">
+              <div className="text-jacarta-900 dark:text-white text-2xl ml-3 font-bold">
                 {getSiteName()}
               </div>
             </div>
           </Link>
 
           {isAvailable && (
-            <nav className="navbar w-full hidden lg:block xl:ml-[8%] --border">
+            <nav className="navbar w-full hidden lg:block xl:ml-[3%] --border">
               <ul className="flex flex-col lg:flex-row">
                 <Nav />
               </ul>
