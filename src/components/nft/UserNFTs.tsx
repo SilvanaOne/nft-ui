@@ -16,6 +16,7 @@ export default function UserNfts({
   items: NftInfo[];
   transactions?: TransactionData[];
 }) {
+  console.log("UserNfts items", items.length);
   return (
     <section className="relative">
       <picture className="pointer-events-none absolute inset-0 -z-10 dark:hidden">
