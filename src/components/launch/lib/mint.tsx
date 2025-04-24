@@ -169,6 +169,7 @@ export async function mintNFT(params: {
       }
       const mintParams: NftMintTransactionParams = {
         txType: "nft:mint",
+        memo: `mint NFT ${data.name}`,
         sender,
         collectionAddress: data.collectionAddress,
         nftMintParams: {

@@ -490,6 +490,8 @@ export async function tokenAction(params: {
         return;
       }
 
+      item.memo = `${item.txType.split(":")[1]} NFT ${tokenData.nftName}`;
+
       const mintResult = await buildNftTransaction({
         sender: senderAddress,
         updateTimelineItem,
