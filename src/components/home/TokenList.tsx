@@ -77,6 +77,7 @@ export default function TokenList({
   collectionAddress,
   nfts,
 }: TokenListProps) {
+  console.log("TokenList nfts", nfts?.length);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const { state, dispatch } = useTokenDetails();
@@ -105,6 +106,10 @@ export default function TokenList({
   function setListSelectedCollection(collection: string | undefined) {
     setSelectedCollection(collection);
   }
+
+  useEffect(() => {
+    if (nfts) setItemsToDisplay(nfts);
+  }, [nfts]);
 
   useEffect(() => {
     // tippy("[data-tippy-content]");
