@@ -201,15 +201,15 @@ export default function UserDetails({ userAddress }: ItemDetailsProps) {
       {/* {avatarCollection?.info?.banner && (
         <Banner image={avatarCollection.info?.banner} />
       )} */}
-      {avatarNft?.info && (
-        <UserProfile item={avatarNft.info} userAddress={userAddress} />
-      )}
-      {fetchedNfts && (
-        <UserNfts
-          items={fetchedNfts}
-          transactions={transactions?.sort((a, b) => b.timestamp - a.timestamp)}
-        />
-      )}
+      <UserProfile item={avatarNft?.info} userAddress={userAddress} />
+      <UserNfts
+        items={fetchedNfts ?? []}
+        transactions={
+          fetchedNfts
+            ? transactions?.sort((a, b) => b.timestamp - a.timestamp)
+            : []
+        }
+      />
     </div>
   );
 }

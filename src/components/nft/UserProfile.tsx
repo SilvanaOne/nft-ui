@@ -7,7 +7,7 @@ export default function Profile({
   item,
   userAddress,
 }: {
-  item: NftInfo;
+  item?: NftInfo;
   userAddress: string;
 }) {
   return (
@@ -17,9 +17,7 @@ export default function Profile({
           <Image
             width={138}
             height={138}
-            src={
-              item.image ? item.image : "/img/collections/collection_avatar.jpg"
-            }
+            src={item?.image ? item.image : "/img/minanft.png"}
             alt="collection avatar"
             className="rounded-xl border-[5px] border-white dark:border-jacarta-600"
           />
