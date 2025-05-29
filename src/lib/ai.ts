@@ -62,7 +62,7 @@ export async function generateImage(params: {
       user: address,
     });
 
-    const url = completion.data[0].url;
+    const url = completion?.data?.[0]?.url;
     if (!url) {
       log.error("No image generated", { ...params, prompt, chain });
       return { blob: undefined, error: "ChatGPT error: No image generated" };
