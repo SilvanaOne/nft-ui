@@ -107,6 +107,7 @@ export async function buildCollectionLaunchTransaction(
     });
     const result = await launchNftCollection({
       body: params,
+      throwOnError: false,
     });
     console.log("buildCollectionLaunchTransaction: result", result);
     if (!result)
@@ -195,7 +196,7 @@ export async function buildCollectionLaunchTransaction(
     return {
       success: false,
       error: `Error while building transaction ${
-        error?.message ?? "error E305"
+        error?.message ?? error?.error ?? "error E305"
       }`,
     };
   }
