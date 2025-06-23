@@ -143,7 +143,6 @@ export async function buildCollectionLaunchTransaction(
     });
     const result = await launchNftCollection({
       body: params,
-      throwOnError: false,
     });
     console.log("buildCollectionLaunchTransaction: result", result);
     if (!result)
