@@ -14,13 +14,7 @@ import {
   proveTransaction,
   BuiltNftTransaction,
 } from "@/lib/api";
-import {
-  NftTransferTransactionParams,
-  NftApproveTransactionParams,
-  NftSellTransactionParams,
-  NftBuyTransactionParams,
-  NftTransaction,
-} from "@silvana-one/api";
+
 import { TokenActionTransactionParams } from "@/lib/token";
 const DEBUG = debug();
 const chain = getChain();
