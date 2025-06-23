@@ -303,82 +303,62 @@ export async function buildTransaction(
       error: string;
     }
 > {
-  const tx =
-    params.txType === "nft:transfer"
-      ? (
-          await transferNft({
-            body: params,
-          })
-        ).data
-      : // : params.txType === "nft:approve" ? (
-      //   await approveNft({
-      //     body: params,
-      //   })
-      // ).data
-      params.txType === "nft:sell"
-      ? (
-          await sellNft({
-            body: params,
-          })
-        ).data
-      : params.txType === "nft:buy"
-      ? (
-          await buyNft({
-            body: params,
-          })
-        ).data
-      : undefined;
-  if (!tx) return { success: false, error: "Failed to build transaction" };
-  if (!tx.storage) return { success: false, error: "Failed to get storage" };
-  if (!tx.metadataRoot)
-    return { success: false, error: "Failed to get metadata root" };
+  try {
+    const tx =
+      params.txType === "nft:transfer"
+        ? (
+            await transferNft({
+              body: params,
+            })
+          ).data
+        : params.txType === "nft:sell"
+        ? (
+            await sellNft({
+              body: params,
+            })
+          ).data
+        : params.txType === "nft:buy"
+        ? (
+            await buyNft({
+              body: params,
+            })
+          ).data
+        : undefined;
+    if (!tx) return { success: false, error: "Failed to build transaction" };
+    if (!tx.storage) return { success: false, error: "Failed to get storage" };
+    if (!tx.metadataRoot)
+      return { success: false, error: "Failed to get metadata root" };
 
-  const collectionAddress = tx?.request?.collectionAddress;
-  if (!collectionAddress)
-    return { success: false, error: "Failed to get collection address" };
-  const collectionName = tx?.collectionName;
-  if (!collectionName)
-    return { success: false, error: "Failed to get collection name" };
+    const collectionAddress = tx?.request?.collectionAddress;
+    if (!collectionAddress)
+      return { success: false, error: "Failed to get collection address" };
+    const collectionName = tx?.collectionName;
+    if (!collectionName)
+      return { success: false, error: "Failed to get collection name" };
 
-  const nftName = tx?.nftName;
-  if (!nftName) {
-    return { success: false, error: "Failed to get NFT name" };
+    const nftName = tx?.nftName;
+    if (!nftName) {
+      return { success: false, error: "Failed to get NFT name" };
+    }
+
+    return {
+      success: true,
+      tx: {
+        tx,
+        nftName,
+        collectionName,
+        collectionAddress,
+      },
+    };
+  } catch (error: any) {
+    console.error("buildTransaction error", error?.message);
+    return {
+      success: false,
+      error: `Error while building transaction ${
+        error?.message ?? "error E305"
+      }`,
+    };
   }
-
-  // const metadataFileName = `nft-${collectionAddress}-${nftAddress}-metadata.json`;
-  // const privateMetadata = tx.privateMetadata;
-  // // Remove private metadata from the transaction
-  // tx.privateMetadata = undefined;
-
-  // const keysFileName = `nft-${collectionAddress}-${nftAddress}-keys.json`;
-  // const privateKeys = JSON.stringify(
-  //   {
-  //     nftName,
-  //     collectionName: tx?.collectionName,
-  //     collectionAddress,
-  //     nftAddress,
-  //     nftContractPrivateKey: nftMintParams?.addressPrivateKey,
-  //     storage: tx?.storage,
-  //     metadataRoot: tx?.metadataRoot,
-  //   },
-  //   null,
-  //   2
-  // );
-  // // Remove private keys from the request
-  // if ((tx?.request as NftMintTransactionParams).nftMintParams) {
-  //   (tx?.request as NftMintTransactionParams).nftMintParams.addressPrivateKey =
-  //     undefined;
-  // }
-
-  return {
-    success: true,
-    tx: {
-      tx,
-      nftName,
-      collectionName,
-      collectionAddress,
-    },
-  };
 }
 
 export async function proveTransaction(params: {
@@ -388,21 +368,31 @@ export async function proveTransaction(params: {
 }): Promise<
   { success: true; jobId: string } | { success: false; error: string }
 > {
-  const { tx, signedData, sendTransaction = SEND_TRANSACTION } = params;
-  console.log("proveTransaction: proving transaction", {
-    send: tx.sendTransaction,
-  });
-  tx.sendTransaction = sendTransaction;
-  const proveTx = (
-    await prove({
-      body: {
-        tx,
-        signedData,
-      },
-    })
-  ).data;
-  if (!proveTx?.jobId) return { success: false, error: "No jobId" };
-  return { success: true, jobId: proveTx.jobId };
+  try {
+    const { tx, signedData, sendTransaction = SEND_TRANSACTION } = params;
+    console.log("proveTransaction: proving transaction", {
+      send: tx.sendTransaction,
+    });
+    tx.sendTransaction = sendTransaction;
+    const proveTx = (
+      await prove({
+        body: {
+          tx,
+          signedData,
+        },
+      })
+    ).data;
+    if (!proveTx?.jobId) return { success: false, error: "No jobId" };
+    return { success: true, jobId: proveTx.jobId };
+  } catch (error: any) {
+    console.error("proveTransaction error", error?.message);
+    return {
+      success: false,
+      error: `Error while proving transaction ${
+        error?.message ?? "error E306"
+      }`,
+    };
+  }
 }
 
 export async function proveTransactions(params: {
@@ -424,15 +414,23 @@ export async function getResult(jobId: string): Promise<
       error?: string;
     }
 > {
-  const proof = (
-    await getProof({
-      body: {
-        jobId,
-      },
-    })
-  ).data;
-  if (!proof) return { success: false, error: "No proof" };
-  return { success: true, results: proof };
+  try {
+    const proof = (
+      await getProof({
+        body: {
+          jobId,
+        },
+      })
+    ).data;
+    if (!proof) return { success: false, error: "No proof" };
+    return { success: true, results: proof };
+  } catch (error: any) {
+    console.error("getResult error", error?.message);
+    return {
+      success: false,
+      error: `Error while getting result ${error?.message ?? "error E307"}`,
+    };
+  }
 }
 
 export async function getTransactionStatus(txHash: string): Promise<
@@ -445,13 +443,23 @@ export async function getTransactionStatus(txHash: string): Promise<
       error?: string;
     }
 > {
-  const status = (
-    await txStatus({
-      body: { hash: txHash },
-    })
-  ).data;
-  if (!status) return { success: false, error: "No status" };
-  return { success: true, status };
+  try {
+    const status = (
+      await txStatus({
+        body: { hash: txHash },
+      })
+    ).data;
+    if (!status) return { success: false, error: "No status" };
+    return { success: true, status };
+  } catch (error: any) {
+    console.error("getTransactionStatus error", error?.message);
+    return {
+      success: false,
+      error: `Error while getting transaction status ${
+        error?.message ?? "error E308"
+      }`,
+    };
+  }
 }
 
 export async function sendTransaction(transaction: string): Promise<
@@ -464,13 +472,23 @@ export async function sendTransaction(transaction: string): Promise<
       error?: string;
     }
 > {
-  const reply = (
-    await sendTransactionApi({
-      body: { transaction },
-    })
-  ).data;
-  if (!reply) return { success: false, error: "Error sending transaction" };
-  return { success: true, reply };
+  try {
+    const reply = (
+      await sendTransactionApi({
+        body: { transaction },
+      })
+    ).data;
+    if (!reply) return { success: false, error: "Error sending transaction" };
+    return { success: true, reply };
+  } catch (error: any) {
+    console.error("sendTransaction error", error?.message);
+    return {
+      success: false,
+      error: `Error while sending transaction ${
+        error?.message ?? "error E309"
+      }`,
+    };
+  }
 }
 
 export async function balance(address: string): Promise<
@@ -527,9 +545,14 @@ export async function getTransactions(params: {
       success: true,
       transactions: reply.transactions,
     };
-  } catch (error) {
-    console.error(error);
-    return { success: false, error: "Error getting transactions" };
+  } catch (error: any) {
+    console.error("getTransactions error", error?.message);
+    return {
+      success: false,
+      error: `Error while getting transactions ${
+        error?.message ?? "error E310"
+      }`,
+    };
   }
 }
 
