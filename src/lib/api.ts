@@ -105,11 +105,22 @@ export async function buildCollectionLaunchTransaction(
     console.log("buildCollectionLaunchTransaction: building transaction", {
       params,
     });
-    const tx = (
-      await launchNftCollection({
-        body: params,
-      })
-    ).data;
+    const result = await launchNftCollection({
+      body: params,
+    });
+    if (!result)
+      return { success: false, error: "Failed to build transaction" };
+    if (!result?.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to build transaction: ${
+          result.error ?? responseError ?? "Error E301-1"
+        }`,
+      };
+    }
+    const tx = result.data;
+    if (!tx) return { success: false, error: "Failed to build transaction" };
     console.log("buildCollectionLaunchTransaction: transaction result", {
       tx,
     });
@@ -202,11 +213,21 @@ export async function buildMintTransaction(
     }
 > {
   try {
-    const tx = (
-      await mintNft({
-        body: params,
-      })
-    ).data;
+    const result = await mintNft({
+      body: params,
+    });
+    if (!result)
+      return { success: false, error: "Failed to build transaction" };
+    if (!result?.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to build transaction: ${
+          result.error ?? responseError ?? "Error E302-1"
+        }`,
+      };
+    }
+    const tx = result?.data;
     if (!tx) return { success: false, error: "Failed to build transaction" };
     if (!tx.privateMetadata)
       return { success: false, error: "Failed to get private metadata" };
@@ -326,26 +347,32 @@ export async function buildTransaction(
     }
 > {
   try {
-    const tx =
+    const result =
       params.txType === "nft:transfer"
-        ? (
-            await transferNft({
-              body: params,
-            })
-          ).data
+        ? await transferNft({
+            body: params,
+          })
         : params.txType === "nft:sell"
-        ? (
-            await sellNft({
-              body: params,
-            })
-          ).data
+        ? await sellNft({
+            body: params,
+          })
         : params.txType === "nft:buy"
-        ? (
-            await buyNft({
-              body: params,
-            })
-          ).data
+        ? await buyNft({
+            body: params,
+          })
         : undefined;
+    if (!result)
+      return { success: false, error: "Failed to build transaction" };
+    if (!result?.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to build transaction: ${
+          result.error ?? responseError ?? "Error E303-1"
+        }`,
+      };
+    }
+    const tx = result.data;
     if (!tx) return { success: false, error: "Failed to build transaction" };
     if (!tx.storage) return { success: false, error: "Failed to get storage" };
     if (!tx.metadataRoot)
@@ -396,16 +423,26 @@ export async function proveTransaction(params: {
       send: tx.sendTransaction,
     });
     tx.sendTransaction = sendTransaction;
-    const proveTx = (
-      await prove({
-        body: {
-          tx,
-          signedData,
-        },
-      })
-    ).data;
-    if (!proveTx?.jobId) return { success: false, error: "No jobId" };
-    return { success: true, jobId: proveTx.jobId };
+    const result = await prove({
+      body: {
+        tx,
+        signedData,
+      },
+    });
+    if (!result)
+      return { success: false, error: "Failed to prove transaction" };
+    if (!result.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to prove transaction: ${
+          result.error ?? responseError ?? "Error E304-1"
+        }`,
+      };
+    }
+    const jobId = result?.data?.jobId;
+    if (!jobId) return { success: false, error: "No jobId" };
+    return { success: true, jobId };
   } catch (error: any) {
     console.error("proveTransaction error", error?.message);
     return {
@@ -437,15 +474,24 @@ export async function getResult(jobId: string): Promise<
     }
 > {
   try {
-    const proof = (
-      await getProof({
-        body: {
-          jobId,
-        },
-      })
-    ).data;
-    if (!proof) return { success: false, error: "No proof" };
-    return { success: true, results: proof };
+    const result = await getProof({
+      body: {
+        jobId,
+      },
+    });
+    if (!result) return { success: false, error: "Failed to get proof" };
+    if (!result.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to get proof: ${
+          result.error ?? responseError ?? "Error E309-1"
+        }`,
+      };
+    }
+    const results = result.data;
+    if (!results) return { success: false, error: "No results" };
+    return { success: true, results };
   } catch (error: any) {
     console.error("getResult error", error?.message);
     return {
@@ -466,11 +512,21 @@ export async function getTransactionStatus(txHash: string): Promise<
     }
 > {
   try {
-    const status = (
-      await txStatus({
-        body: { hash: txHash },
-      })
-    ).data;
+    const result = await txStatus({
+      body: { hash: txHash },
+    });
+    if (!result)
+      return { success: false, error: "Failed to get transaction status" };
+    if (!result.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to get transaction status: ${
+          result.error ?? responseError ?? "Error E310-1"
+        }`,
+      };
+    }
+    const status = result?.data;
     if (!status) return { success: false, error: "No status" };
     return { success: true, status };
   } catch (error: any) {
@@ -495,12 +551,21 @@ export async function sendTransaction(transaction: string): Promise<
     }
 > {
   try {
-    const reply = (
-      await sendTransactionApi({
-        body: { transaction },
-      })
-    ).data;
-    if (!reply) return { success: false, error: "Error sending transaction" };
+    const result = await sendTransactionApi({
+      body: { transaction },
+    });
+    if (!result) return { success: false, error: "Failed to send transaction" };
+    if (!result.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to send transaction: ${
+          result.error ?? responseError ?? "Error E311-1"
+        }`,
+      };
+    }
+    const reply = result.data;
+    if (!reply) return { success: false, error: "No reply" };
     return { success: true, reply };
   } catch (error: any) {
     console.error("sendTransaction error", error?.message);
@@ -525,12 +590,21 @@ export async function balance(address: string): Promise<
     }
 > {
   try {
-    const reply = (
-      await getTokenBalance({
-        body: { address },
-      })
-    ).data;
-    if (!reply) return { success: false, error: "Error getting balance" };
+    const result = await getTokenBalance({
+      body: { address },
+    });
+    if (!result) return { success: false, error: "Failed to get balance" };
+    if (!result.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to get balance: ${
+          result.error ?? responseError ?? "Error E312-1"
+        }`,
+      };
+    }
+    const reply = result.data;
+    if (!reply) return { success: false, error: "No reply" };
     return {
       success: true,
       balance: reply.balance,
@@ -557,15 +631,22 @@ export async function getTransactions(params: {
 > {
   const { collectionAddress, nftAddress } = params;
   try {
-    const reply = (
-      await getTransactionsApi({
-        body: { tokenAddress: collectionAddress, address: nftAddress },
-      })
-    ).data;
-    if (!reply) return { success: false, error: "Error getting transactions" };
+    const result = await getTransactionsApi({
+      body: { tokenAddress: collectionAddress, address: nftAddress },
+    });
+    if (!result) return { success: false, error: "Error getting transactions" };
+    if (!result?.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to get transactions: ${
+          result.error ?? responseError ?? "Error E312-1"
+        }`,
+      };
+    }
     return {
       success: true,
-      transactions: reply.transactions,
+      transactions: result.data.transactions,
     };
   } catch (error: any) {
     console.error("getTransactions error", error?.message);
@@ -598,13 +679,26 @@ export async function getUserTransactions(params: {
     const uniqueAddressesArray = Array.from(uniqueCollectionAddresses);
     for (const collectionAddress of uniqueAddressesArray) {
       try {
-        const reply = (
-          await getTransactionsApi({
-            body: { tokenAddress: collectionAddress, address: userAddress },
-          })
-        ).data;
-        if (reply && reply.transactions && Array.isArray(reply.transactions)) {
-          transactions.push(...reply.transactions);
+        const result = await getTransactionsApi({
+          body: { tokenAddress: collectionAddress, address: userAddress },
+        });
+        if (!result)
+          return { success: false, error: "Failed to get transactions" };
+        if (!result.data) {
+          const responseError = result?.response?.statusText;
+          return {
+            success: false,
+            error: `Failed to get transactions: ${
+              result.error ?? responseError ?? "Error E312-1"
+            }`,
+          };
+        }
+        if (
+          result.data &&
+          result.data.transactions &&
+          Array.isArray(result.data.transactions)
+        ) {
+          transactions.push(...result.data.transactions);
         }
       } catch (error: any) {
         console.error("getUserTransactions", error?.message);
@@ -634,15 +728,23 @@ export async function getTokenHolders(params: {
 > {
   const { collectionAddress } = params;
   try {
-    const reply = (
-      await getTokenHoldersApi({
-        body: { address: collectionAddress },
-      })
-    ).data;
-    if (!reply) return { success: false, error: "Error getting token holders" };
+    const result = await getTokenHoldersApi({
+      body: { address: collectionAddress },
+    });
+    if (!result)
+      return { success: false, error: "Error getting token holders" };
+    if (!result.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to get token holders: ${
+          result.error ?? responseError ?? "Error E312-1"
+        }`,
+      };
+    }
     return {
       success: true,
-      tokenHolders: reply.holders,
+      tokenHolders: result.data.holders,
     };
   } catch (error) {
     console.error(error);
@@ -664,14 +766,19 @@ export async function storeNft(params: {
 > {
   const { nft, signature } = params;
   try {
-    const reply = (
-      await cmsStoreNft({
-        body: { nft, signature },
-      })
-    ).data;
-    if (!reply || !reply.success)
-      return { success: false, error: "Error storing NFT" };
-
+    const result = await cmsStoreNft({
+      body: { nft, signature },
+    });
+    if (!result) return { success: false, error: "Error storing NFT" };
+    if (!result.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to store NFT: ${
+          result.error ?? responseError ?? "Error E312-1"
+        }`,
+      };
+    }
     return {
       success: true,
     };
@@ -697,17 +804,22 @@ export async function readNft(params: {
 > {
   const { collectionAddress, nftName, signature } = params;
   try {
-    const reply = (
-      await cmsReadNft({
-        body: { collectionAddress, nftName, signature },
-      })
-    ).data;
-    if (!reply || !reply.nfts)
-      return { success: false, error: "Error reading NFTs" };
-
+    const result = await cmsReadNft({
+      body: { collectionAddress, nftName, signature },
+    });
+    if (!result) return { success: false, error: "Error reading NFTs" };
+    if (!result.data) {
+      const responseError = result?.response?.statusText;
+      return {
+        success: false,
+        error: `Failed to read NFTs: ${
+          result.error ?? responseError ?? "Error E312-1"
+        }`,
+      };
+    }
     return {
       success: true,
-      nfts: reply.nfts,
+      nfts: result.data?.nfts ?? [],
     };
   } catch (error) {
     console.error(error);
