@@ -327,8 +327,8 @@ export async function mintNFT(params: {
       nftAddress: reply.nftAddress,
     };
   } catch (error: any) {
-    console.error("Error in deployToken", error);
-    log.error("deployToken: Error while deploying token", { error });
+    console.error("mint: Error in deployToken", error);
+    log.error("mint: deployToken: Error while deploying token", { error });
     updateTimelineItem({
       groupId,
       update: {
@@ -337,7 +337,6 @@ export async function mintNFT(params: {
         status: "error",
       },
     });
-    log.error("deployToken: Error while deploying token", { error });
     return {
       success: false,
       error: "Error while deploying token",
