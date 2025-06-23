@@ -45,6 +45,7 @@ export type { TokenHolder, TransactionData };
  * Handles various error formats including nested objects
  */
 function serializeError(error: any): string | undefined {
+  console.log("serializeError: error", error);
   if (!error) return undefined;
 
   // If it's already a string, return it
@@ -228,10 +229,15 @@ export async function buildCollectionLaunchTransaction(
     };
   } catch (error: any) {
     console.error("buildCollectionLaunchTransaction error", error);
+    const serializedError = serializeError(error);
+    console.log(
+      "buildCollectionLaunchTransaction: serializedError",
+      serializedError
+    );
     return {
       success: false,
       error: `Error while building transaction ${
-        serializeError(error) ?? "error E305"
+        serializedError ?? "error E305"
       }`,
     };
   }
