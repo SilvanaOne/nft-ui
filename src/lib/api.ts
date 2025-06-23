@@ -377,7 +377,7 @@ export async function buildTransaction(
     return {
       success: false,
       error: `Error while building transaction ${
-        error?.message ?? "error E305"
+        error?.message ?? "error E307"
       }`,
     };
   }
@@ -411,7 +411,7 @@ export async function proveTransaction(params: {
     return {
       success: false,
       error: `Error while proving transaction ${
-        error?.message ?? "error E306"
+        error?.message ?? "error E308"
       }`,
     };
   }
@@ -450,7 +450,7 @@ export async function getResult(jobId: string): Promise<
     console.error("getResult error", error?.message);
     return {
       success: false,
-      error: `Error while getting result ${error?.message ?? "error E307"}`,
+      error: `Error while getting result ${error?.message ?? "error E309"}`,
     };
   }
 }
@@ -478,7 +478,7 @@ export async function getTransactionStatus(txHash: string): Promise<
     return {
       success: false,
       error: `Error while getting transaction status ${
-        error?.message ?? "error E308"
+        error?.message ?? "error E310"
       }`,
     };
   }
@@ -507,7 +507,7 @@ export async function sendTransaction(transaction: string): Promise<
     return {
       success: false,
       error: `Error while sending transaction ${
-        error?.message ?? "error E309"
+        error?.message ?? "error E311"
       }`,
     };
   }
@@ -572,7 +572,7 @@ export async function getTransactions(params: {
     return {
       success: false,
       error: `Error while getting transactions ${
-        error?.message ?? "error E310"
+        error?.message ?? "error E312"
       }`,
     };
   }
