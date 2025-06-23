@@ -40,6 +40,41 @@ import { getChain } from "./chain";
 
 export type { TokenHolder, TransactionData };
 
+/**
+ * Helper function to serialize error objects to strings
+ * Handles various error formats including nested objects
+ */
+function serializeError(error: any): string | undefined {
+  if (!error) return undefined;
+
+  // If it's already a string, return it
+  if (typeof error === "string") return error;
+
+  // If it has a message property, use that
+  if (error.message && typeof error.message === "string") {
+    return error.message;
+  }
+
+  // If it has an error property, recursively serialize it
+  if (error.error) {
+    const serialized = serializeError(error.error);
+    if (serialized) return serialized;
+  }
+
+  // If it's an object, try to stringify it
+  if (typeof error === "object") {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      // If JSON.stringify fails, fall back to toString
+      return error.toString();
+    }
+  }
+
+  // For other types, convert to string
+  return String(error);
+}
+
 const SEND_TRANSACTION = true;
 
 const chain = getChain();
@@ -196,7 +231,7 @@ export async function buildCollectionLaunchTransaction(
     return {
       success: false,
       error: `Error while building transaction ${
-        error?.message ?? error?.error ?? "error E305"
+        serializeError(error) ?? "error E305"
       }`,
     };
   }
@@ -309,11 +344,11 @@ export async function buildMintTransaction(
       },
     };
   } catch (error: any) {
-    console.error("buildMintTransaction error", error?.message);
+    console.error("buildMintTransaction error", error);
     return {
       success: false,
       error: `Error while building transaction ${
-        error?.message ?? "error E306"
+        serializeError(error) ?? "error E306"
       }`,
     };
   }
@@ -402,11 +437,11 @@ export async function buildTransaction(
       },
     };
   } catch (error: any) {
-    console.error("buildTransaction error", error?.message);
+    console.error("buildTransaction error", error);
     return {
       success: false,
       error: `Error while building transaction ${
-        error?.message ?? "error E307"
+        serializeError(error) ?? "error E307"
       }`,
     };
   }
@@ -446,11 +481,11 @@ export async function proveTransaction(params: {
     if (!jobId) return { success: false, error: "No jobId" };
     return { success: true, jobId };
   } catch (error: any) {
-    console.error("proveTransaction error", error?.message);
+    console.error("proveTransaction error", error);
     return {
       success: false,
       error: `Error while proving transaction ${
-        error?.message ?? "error E308"
+        serializeError(error) ?? "error E308"
       }`,
     };
   }
@@ -495,10 +530,12 @@ export async function getResult(jobId: string): Promise<
     if (!results) return { success: false, error: "No results" };
     return { success: true, results };
   } catch (error: any) {
-    console.error("getResult error", error?.message);
+    console.error("getResult error", error);
     return {
       success: false,
-      error: `Error while getting result ${error?.message ?? "error E309"}`,
+      error: `Error while getting result ${
+        serializeError(error) ?? "error E309"
+      }`,
     };
   }
 }
@@ -532,11 +569,11 @@ export async function getTransactionStatus(txHash: string): Promise<
     if (!status) return { success: false, error: "No status" };
     return { success: true, status };
   } catch (error: any) {
-    console.error("getTransactionStatus error", error?.message);
+    console.error("getTransactionStatus error", error);
     return {
       success: false,
       error: `Error while getting transaction status ${
-        error?.message ?? "error E310"
+        serializeError(error) ?? "error E310"
       }`,
     };
   }
@@ -570,11 +607,11 @@ export async function sendTransaction(transaction: string): Promise<
     if (!reply) return { success: false, error: "No reply" };
     return { success: true, reply };
   } catch (error: any) {
-    console.error("sendTransaction error", error?.message);
+    console.error("sendTransaction error", error);
     return {
       success: false,
       error: `Error while sending transaction ${
-        error?.message ?? "error E311"
+        serializeError(error) ?? "error E311"
       }`,
     };
   }
@@ -651,11 +688,11 @@ export async function getTransactions(params: {
       transactions: result.data.transactions,
     };
   } catch (error: any) {
-    console.error("getTransactions error", error?.message);
+    console.error("getTransactions error", error);
     return {
       success: false,
       error: `Error while getting transactions ${
-        error?.message ?? "error E312"
+        serializeError(error) ?? "error E312"
       }`,
     };
   }
@@ -703,7 +740,7 @@ export async function getUserTransactions(params: {
           transactions.push(...result.data.transactions);
         }
       } catch (error: any) {
-        console.error("getUserTransactions", error?.message);
+        console.error("getUserTransactions", error);
       }
     }
     return {
@@ -711,7 +748,7 @@ export async function getUserTransactions(params: {
       transactions,
     };
   } catch (error: any) {
-    console.error("getUserTransactions", error?.message);
+    console.error("getUserTransactions", error);
     return { success: false, error: "Error getting transactions" };
   }
 }
