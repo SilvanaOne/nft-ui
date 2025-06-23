@@ -108,6 +108,7 @@ export async function buildCollectionLaunchTransaction(
     const result = await launchNftCollection({
       body: params,
     });
+    console.log("buildCollectionLaunchTransaction: result", result);
     if (!result)
       return { success: false, error: "Failed to build transaction" };
     if (!result?.data) {
@@ -190,7 +191,7 @@ export async function buildCollectionLaunchTransaction(
       },
     };
   } catch (error: any) {
-    console.error("buildCollectionLaunchTransaction error", error?.message);
+    console.error("buildCollectionLaunchTransaction error", error);
     return {
       success: false,
       error: `Error while building transaction ${
