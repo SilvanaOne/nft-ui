@@ -14,11 +14,11 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "" });
 let rateLimiter: RateLimiterRedis | null = null;
 const RATE_LIMIT_KV_URL = process.env.RATE_LIMIT_KV_URL;
 
-// initializeRedisRateLimiterInternal({
-//   name: "ai",
-//   points: 15,
-//   duration: 60 * 60 * 24, // 1 day
-// });
+initializeRedisRateLimiterInternal({
+  name: "ai",
+  points: 15,
+  duration: 60 * 60 * 24, // 1 day
+});
 
 export async function generateImage(params: {
   symbol: string;
@@ -33,7 +33,7 @@ export async function generateImage(params: {
   }
   try {
     const promptCompletion = await openai.chat.completions.create({
-      model: "o3-mini",
+      model: "o4-mini",
       messages: [
         {
           role: "user",
@@ -134,7 +134,7 @@ function initializeRedisRateLimiterInternal(params: {
   });
 }
 
-export async function rateLimit(params: { key: string }): Promise<boolean> {
+async function rateLimit(params: { key: string }): Promise<boolean> {
   const { key } = params;
   if (!RATE_LIMIT_KV_URL) {
     log.error("rateLimit: RATE_LIMIT_KV_URL not set");
