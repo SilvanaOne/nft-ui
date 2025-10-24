@@ -22,6 +22,18 @@ export function getChainId(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
   return getChain();
 }
 
+export function getAlgoliaChain(): "mainnet" | "devnet" | "zeko" {
+  const chain = getChain();
+  switch (chain) {
+    case "mina:mainnet":
+      return "mainnet";
+    case "mina:devnet":
+      return "devnet";
+    case "zeko:testnet":
+      return "zeko";
+  }
+}
+
 export function getUrl(): string {
   const chain = getChain();
   switch (chain) {

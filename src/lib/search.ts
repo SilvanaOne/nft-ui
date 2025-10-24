@@ -1,10 +1,11 @@
 "use server";
 import { searchClient } from "@algolia/client-search";
-import { getChain } from "@/lib/chain";
+import { getChain, getAlgoliaChain } from "@/lib/chain";
 import { debug } from "@/lib/debug";
 import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import { log as logtail } from "@logtail/next";
 const chain = getChain();
+const algoliaChain = getAlgoliaChain();
 
 const log = logtail.with({
   chain,
@@ -19,7 +20,7 @@ if (NFT_ALGOLIA_KEY === undefined)
   throw new Error("NFT_ALGOLIA_KEY is undefined");
 
 const client = searchClient(NFT_ALGOLIA_PROJECT, NFT_ALGOLIA_KEY);
-const indexName = `standard-${chain}`;
+const indexName = `standard-${algoliaChain}`;
 
 export interface AlgoliaCollectionList {
   hits: CollectionInfo[];
