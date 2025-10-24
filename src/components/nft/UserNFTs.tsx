@@ -113,10 +113,10 @@ export default function UserNfts({
             role="tabpanel"
             aria-labelledby="activity-tab"
           >
-            {transactions && chain !== "zeko" && (
+            {transactions && chain !== "zeko:testnet" && (
               <Transactions transactions={transactions} />
             )}
-            {!transactions && chain !== "zeko" && <Loading />}
+            {!transactions && chain !== "zeko:testnet" && <Loading />}
           </div>
           {/* end activity tab */}
         </div>
