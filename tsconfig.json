@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "outDir": "./dist",
     "allowJs": true,
     "skipLibCheck": true,
@@ -25,23 +29,44 @@
       }
     ],
     "paths": {
-      "@/components/*": ["./src/components/*"],
-      "@/context/*": ["./src/context/*"],
-      "@/utils/*": ["./src/utils/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/home/*": ["./src/app/home/*"],
-      "@/public/*": ["./public/*"],
-      "@/data/*": ["./data/*"],
-      "@/*": ["./src/*"]
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/context/*": [
+        "./src/context/*"
+      ],
+      "@/utils/*": [
+        "./src/utils/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/home/*": [
+        "./src/app/home/*"
+      ],
+      "@/public/*": [
+        "./public/*"
+      ],
+      "@/data/*": [
+        "./data/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
     },
-    "jsx": "preserve",
-    "types": ["react"]
+    "jsx": "react-jsx",
+    "types": [
+      "react"
+    ]
   },
   "include": [
     "next-env.d.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

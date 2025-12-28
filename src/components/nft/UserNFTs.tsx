@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CollectionInfo, NftInfo, TransactionData } from "@silvana-one/api";
+import type { CollectionInfo, NftInfo, TransactionData } from "@silvana-one/api";
 import TokenList from "@/components/home/TokenList";
 import { Loading } from "./Loading";
 import { Transactions } from "./Transactions";
