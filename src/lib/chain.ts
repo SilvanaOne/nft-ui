@@ -3,32 +3,46 @@ import {
   Mainnet,
   Devnet,
   Zeko,
+  MesaTestnet,
   CanonicalBlockchain,
 } from "@silvana-one/api";
 
-export function getChain(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
+export function getChain():
+  | "mina:mainnet"
+  | "mina:devnet"
+  | "mina:testnet"
+  | "zeko:testnet" {
   const chain = process.env.NEXT_PUBLIC_CHAIN;
   if (chain === undefined) throw new Error("NEXT_PUBLIC_CHAIN is undefined");
   if (
     chain !== "mina:devnet" &&
     chain !== "mina:mainnet" &&
+    chain !== "mina:testnet" &&
     chain !== "zeko:testnet"
   )
-    throw new Error("NEXT_PUBLIC_CHAIN must be devnet or mainnet or zeko");
+    throw new Error(
+      "NEXT_PUBLIC_CHAIN must be devnet, testnet, mainnet or zeko"
+    );
   return chain;
 }
 
-export function getChainId(): "mina:mainnet" | "mina:devnet" | "zeko:testnet" {
+export function getChainId():
+  | "mina:mainnet"
+  | "mina:devnet"
+  | "mina:testnet"
+  | "zeko:testnet" {
   return getChain();
 }
 
-export function getAlgoliaChain(): "mainnet" | "devnet" | "zeko" {
+export function getAlgoliaChain(): "mainnet" | "devnet" | "testnet" | "zeko" {
   const chain = getChain();
   switch (chain) {
     case "mina:mainnet":
       return "mainnet";
     case "mina:devnet":
       return "devnet";
+    case "mina:testnet":
+      return "testnet";
     case "zeko:testnet":
       return "zeko";
   }
@@ -41,6 +55,8 @@ export function getUrl(): string {
       return "https://mainnet.minanft.io";
     case "mina:devnet":
       return "https://devnet.minanft.io";
+    case "mina:testnet":
+      return "https://testnet.minanft.io";
     case "zeko:testnet":
       return "https://zeko.minanft.io";
   }
@@ -59,6 +75,8 @@ export function getNetwork(): MinaNetwork {
       return Mainnet;
     case "mina:devnet":
       return Devnet;
+    case "mina:testnet":
+      return MesaTestnet;
     case "zeko:testnet":
       return Zeko;
   }
@@ -89,6 +107,7 @@ export function getSiteName(): string {
   const chain = getChain();
   if (chain === "mina:mainnet") return "MinaNFT";
   if (chain === "mina:devnet") return "MinaNFT";
+  if (chain === "mina:testnet") return "MinaNFT";
   if (chain === "zeko:testnet") return "MinaNFT Zeko";
   throw new Error("Chain not supported");
 }

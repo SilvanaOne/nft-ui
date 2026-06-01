@@ -7,7 +7,7 @@ import { NotImplemented } from "./NotImplemented";
 import { NftInfo, CollectionInfo } from "@silvana-one/api";
 import { Transactions } from "./Transactions";
 //import History from "./History";
-import { TokenHolder, TransactionData } from "@/lib/api";
+import type { TokenHolder, TransactionData } from "@silvana-one/api";
 import { Loading } from "./Loading";
 import { getChain } from "@/lib/chain";
 const chain = getChain();

@@ -4,7 +4,7 @@ import React, { createContext, useReducer, useContext, ReactNode } from "react";
 import { TokenAction } from "@/lib/token";
 import { NftInfo, CollectionInfo } from "@silvana-one/api";
 // import { Order } from "@/components/orderbook/OrderBook";
-import { TokenHolder, TransactionData } from "@/lib/api";
+import type { TokenHolder, TransactionData } from "@silvana-one/api";
 import { log } from "@/lib/log";
 interface NFTDetailsState {
   info: NftInfo | undefined;

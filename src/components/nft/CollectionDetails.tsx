@@ -12,12 +12,8 @@ import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { socials_item } from "@/data/socials";
-import {
-  TokenHolder,
-  TransactionData,
-  getTokenHolders,
-  getTransactions,
-} from "@/lib/api";
+import { getTokenHolders, getTransactions } from "@/lib/api";
+import type { TokenHolder, TransactionData } from "@silvana-one/api";
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 // import { Order } from "@/components/orderbook/OrderBook";
 import Banner from "./Banner";

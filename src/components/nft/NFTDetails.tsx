@@ -9,15 +9,12 @@ import { SearchContext } from "@/context/search";
 import { AddressContext } from "@/context/address";
 import { getWalletInfo, connectWallet } from "@/lib/wallet";
 import { socials_item } from "@/data/socials";
-import {
-  getTokenHolders,
-  getTransactions,
-  TokenHolder,
-  TransactionData,
-} from "@/lib/api";
+import { getTokenHolders, getTransactions } from "@/lib/api";
+import type { TokenHolder, TransactionData } from "@silvana-one/api";
 import { explorerTokenUrl, explorerAccountUrl } from "@/lib/chain";
 // import { Order } from "@/components/orderbook/OrderBook";
 import { algoliaGetCollection, algoliaGetNFT } from "@/lib/search";
+import { MesaUpgradeButton } from "@/components/mesa/MesaUpgrade";
 import { getNFTInfo } from "@/lib/api";
 const DEBUG = process.env.NEXT_PUBLIC_DEBUG === "true";
 
@@ -366,6 +363,19 @@ export default function NftDetails({
                       <path d="M10 15.172l9.192-9.193 1.415 1.414L10 18l-6.364-6.364 1.414-1.414z"></path>
                     </svg>
                   </span>
+                </div>
+
+                {/* Mesa verification-key upgrade (testnet-gated) */}
+                <div className="ml-auto flex flex-wrap gap-2">
+                  <MesaUpgradeButton
+                    address={nftAddress}
+                    parentAddress={collectionAddress}
+                    label="Mesa: NFT"
+                  />
+                  <MesaUpgradeButton
+                    address={collectionAddress}
+                    label="Mesa: collection"
+                  />
                 </div>
 
                 {/* Likes / Actions */}
