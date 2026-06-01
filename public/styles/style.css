@@ -1,13 +1,12 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
-@layer utilities {
-  .visible {
-    visibility: visible;
-  }
-  .invisible {
-    visibility: hidden;
-  }
+@utility visible {
+  visibility: visible;
+}
+
+@utility invisible {
+  visibility: hidden;
 }
 
 @font-face {
