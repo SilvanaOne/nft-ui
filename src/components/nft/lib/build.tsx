@@ -14,13 +14,7 @@ import {
   proveTransaction,
   BuiltNftTransaction,
 } from "@/lib/api";
-import {
-  NftTransferTransactionParams,
-  NftApproveTransactionParams,
-  NftSellTransactionParams,
-  NftBuyTransactionParams,
-  NftTransaction,
-} from "@silvana-one/api";
+
 import { TokenActionTransactionParams } from "@/lib/token";
 const DEBUG = debug();
 const chain = getChain();
@@ -230,8 +224,8 @@ export async function buildNftTransaction(params: {
       metadataRoot: reply.metadataRoot,
     };
   } catch (error: any) {
-    console.error("Error in deployToken", error);
-    log.error("deployToken: Error while deploying token", { error });
+    console.error("build: Error in deployToken", error);
+    log.error("build: deployToken: Error while deploying token", { error });
     updateTimelineItem({
       groupId,
       update: {
@@ -240,7 +234,6 @@ export async function buildNftTransaction(params: {
         status: "error",
       },
     });
-    log.error("deployToken: Error while deploying token", { error });
     return {
       success: false,
       error: "Error while deploying token",

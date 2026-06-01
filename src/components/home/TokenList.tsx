@@ -77,7 +77,6 @@ export default function TokenList({
   collectionAddress,
   nfts,
 }: TokenListProps) {
-  console.log("TokenList nfts", nfts?.length);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
   const { state, dispatch } = useTokenDetails();

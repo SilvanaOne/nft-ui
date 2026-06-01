@@ -95,7 +95,7 @@ export default function RootLayout({
           <SpeedInsights />
           <Script
             id="ze-snippet"
-            src="https://static.zdassets.com/ekr/snippet.js?key=03fe2574-de56-408f-bff3-42cfce73e975"
+            src="https://static.zdassets.com/ekr/snippet.js?key=4ea5acb7-4afc-49af-9820-e1576d7580ee"
             crossOrigin="anonymous"
             strategy="afterInteractive"
             async

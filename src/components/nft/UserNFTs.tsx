@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CollectionInfo, NftInfo, TransactionData } from "@silvana-one/api";
+import type { CollectionInfo, NftInfo, TransactionData } from "@silvana-one/api";
 import TokenList from "@/components/home/TokenList";
 import { Loading } from "./Loading";
 import { Transactions } from "./Transactions";
@@ -113,10 +113,10 @@ export default function UserNfts({
             role="tabpanel"
             aria-labelledby="activity-tab"
           >
-            {transactions && chain !== "zeko" && (
+            {transactions && chain !== "zeko:testnet" && (
               <Transactions transactions={transactions} />
             )}
-            {!transactions && chain !== "zeko" && <Loading />}
+            {!transactions && chain !== "zeko:testnet" && <Loading />}
           </div>
           {/* end activity tab */}
         </div>

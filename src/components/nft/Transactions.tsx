@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { TransactionData } from "@/lib/api";
+import type { TransactionData } from "@silvana-one/api";
 import { explorerTransactionUrl, getChain } from "@/lib/chain";
 const chain = getChain();
 
