@@ -136,19 +136,6 @@ const config: Config = {
         },
       },
     },
-    customGroups: {
-      names: ["dropdown"],
-    },
   },
-  variants: {
-    display: ["children", "children-not"],
-  },
-  corePlugins: {
-    visibility: false,
-  },
-  plugins: [
-    require("@tailwindcss/forms"),
-    //require("tailwindcss-custom-groups"),
-  ],
 };
 export default config;
