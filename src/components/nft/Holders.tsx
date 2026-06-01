@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { TokenHolder } from "@/lib/api";
+import type { TokenHolder } from "@silvana-one/api";
 import { explorerAccountUrl } from "@/lib/chain";
 
 interface HoldersProps {

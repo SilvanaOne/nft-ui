@@ -41,8 +41,6 @@ import type {
 } from "@silvana-one/api";
 import { getChain } from "./chain";
 
-export type { TokenHolder, TransactionData };
-
 /**
  * Helper function to serialize error objects to strings
  * Handles various error formats including nested objects
