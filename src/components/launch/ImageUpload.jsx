@@ -177,7 +177,7 @@ export default function EditProfile() {
 
           <div className="flex space-x-5 md:w-1/2 md:pl-8">
             <form onSubmit={(e) => e.preventDefault()} className="shrink-0">
-              <figure className="relative inline-block w-300 h-300 ">
+              <figure className="relative inline-block">
                 <Image
                   src={image}
                   alt="collection avatar"

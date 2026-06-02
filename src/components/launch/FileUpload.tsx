@@ -63,7 +63,7 @@ export function FileUpload({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <figure className="relative inline-block w-300 h-300 ">
+        <figure className="relative inline-block">
           <Image
             src={url ?? "/img/minanft.png"}
             alt="image"
