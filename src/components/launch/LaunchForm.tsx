@@ -406,7 +406,7 @@ export function LaunchForm({
           {mintType === "collection" ? "Launch NFT collection" : "Mint NFT"}
         </h1>
 
-        <div className="mx-auto max-w-[48.125rem] md:flex mt-8">
+        <div className="mx-auto max-w-[48.125rem] md:flex md:items-start mt-8">
           <div className="mb-12 md:w-1/2 md:pr-8">
             {/* Token type */}
             <div className="mb-6">
