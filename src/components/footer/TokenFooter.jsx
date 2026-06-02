@@ -68,7 +68,7 @@ export default function TokenFooter() {
 
         <div className="flex flex-col items-center justify-between space-y-2 py-8 sm:flex-row sm:space-y-0">
           <span className="text-sm dark:text-jacarta-400">
-            &copy; 2025 {getSiteName()} by{" "}
+            &copy; 2026 {getSiteName()} by{" "}
             <a href="https://minanft.io" className="hover:text-accent">
               {"MinaNFT"}
             </a>
